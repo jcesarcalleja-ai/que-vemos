@@ -335,7 +335,9 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  margin-top: 0.55rem;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  list-style: none;
 }
 
 .generos__item {
@@ -519,7 +521,7 @@ button {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
-  align-items: start;
+  align-items: stretch; /* los dos «Ya la vi» quedan a la misma altura */
 }
 
 .duelo__lado {
@@ -531,6 +533,7 @@ button {
 
 .duelo__tarjeta {
   position: relative;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
@@ -821,4 +824,92 @@ button {
 
 .mensaje .boton {
   margin-top: 0.6rem;
+}
+
+/* ───────── Pantallas del flujo: barra superior, swipe inicial, ajustes y aviso ───────── */
+
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+}
+
+.barra__titulo {
+  min-width: 0;
+  color: var(--tenue);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.boton--chico {
+  min-height: 2.75rem;
+  padding: 0.25rem 0.8rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.boton--centrado {
+  align-self: center;
+}
+
+.pantalla__pie {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Swipe inicial: el póster deja sitio a la cabecera y a los números sin tener que bajar. */
+.inicio {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.inicio .carta__poster .poster {
+  width: min(100%, max(7rem, calc((100dvh - 30rem) * 2 / 3)));
+}
+
+.jamas {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.jamas__texto,
+.ajustes__texto {
+  color: var(--tenue);
+}
+
+.ajustes {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.ajustes__seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ajustes__titulo {
+  font-family: var(--fuente-titulo);
+  font-weight: 400;
+  font-size: 1.5rem;
+}
+
+.aviso-guardado {
+  width: 100%;
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: max(env(safe-area-inset-top), 0.75rem) 1rem 0;
+}
+
+.aviso-guardado .mensaje {
+  padding: 0.9rem 1rem;
 }

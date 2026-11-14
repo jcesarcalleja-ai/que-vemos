@@ -3,7 +3,7 @@ import type { Ficha, Plataforma, Titulo } from '../tipos';
 export const NOMBRE_PLATAFORMA: Record<Plataforma, string> = {
   netflix: 'Netflix',
   prime: 'Prime Video',
-  max: 'Max',
+  max: 'HBO Max',
   movistar: 'Movistar Plus+',
 };
 
