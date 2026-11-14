@@ -54,6 +54,13 @@ Solo para mí y mi novia, en un mismo móvil. Sin cuentas ni contraseñas. Todo 
 - **Match sin ningún sí**: gana el mejor puntuado de los 10.
 - **Pantalla de la ganadora** (Duelos o Match): Ver, Tráiler y Ya la vi. No vuelve a ofrecer "Elegir yo".
 
+## De dónde salen los datos
+
+- La app no llama a ninguna API desde el móvil: lee un archivo `catalogo.json` publicado con la web.
+- Un script (`scripts/`) prepara ese archivo: el catálogo, los pósters y la disponibilidad por plataforma salen de TMDB (que la toma de JustWatch), y la **nota es la de IMDb** (ficheros públicos de IMDb); si un título no tiene nota en IMDb, se usa la de TMDB.
+- GitHub Actions regenera el catálogo y publica la web una vez al día. La clave de TMDB vive como secreto del repositorio (`TMDB_API_KEY`) y, en local, en `.env.local` (que no se sube).
+- En España la plataforma «Max» vuelve a llamarse **HBO Max**; en el código es `max`.
+
 ## Arquitectura
 
 - Vite + React + TypeScript, tests con Vitest. Sin backend.
