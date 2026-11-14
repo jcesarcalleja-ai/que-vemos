@@ -6,14 +6,27 @@
 const VERSION = '__VERSION__';
 const ARCHIVOS = '__ARCHIVOS__';
 const CACHE = `que-vemos-${VERSION}`;
+// El catálogo cambia cada día y va aparte: no forma parte de la versión de la app, así que renovarlo no la actualiza.
+const CACHE_CATALOGO = 'que-vemos-catalogo';
+const URL_CATALOGO = new URL('catalogo.json', self.location.href).href;
+
+/** Descarga el catálogo y lo guarda. `no-cache` obliga a preguntar al servidor si hay uno nuevo. */
+async function renovarCatalogo() {
+  const respuesta = await fetch(URL_CATALOGO, { cache: 'no-cache' });
+  if (respuesta.ok) await (await caches.open(CACHE_CATALOGO)).put(URL_CATALOGO, respuesta.clone());
+  return respuesta;
+}
 
 self.addEventListener('install', (evento) => {
   evento.waitUntil(
-    caches
-      .open(CACHE)
-      // cache: 'reload' salta la caché HTTP (GitHub Pages cachea 10 min): si no, una versión nueva podría guardar un index.html viejo.
-      .then((cache) => cache.addAll(ARCHIVOS.map((url) => new Request(url, { cache: 'reload' }))))
-      .then(() => self.skipWaiting()),
+    Promise.all([
+      caches
+        .open(CACHE)
+        // cache: 'reload' salta la caché HTTP (GitHub Pages cachea 10 min): si no, una versión nueva podría guardar un index.html viejo.
+        .then((cache) => cache.addAll(ARCHIVOS.map((url) => new Request(url, { cache: 'reload' })))),
+      // En la primera visita la página pidió el catálogo antes de existir este service worker: se guarda ya.
+      renovarCatalogo().catch(() => {}),
+    ]).then(() => self.skipWaiting()),
   );
 });
 
@@ -22,7 +35,11 @@ self.addEventListener('activate', (evento) => {
     caches
       .keys()
       .then((claves) =>
-        Promise.all(claves.filter((c) => c.startsWith('que-vemos-') && c !== CACHE).map((c) => caches.delete(c))),
+        Promise.all(
+          claves
+            .filter((c) => c.startsWith('que-vemos-') && c !== CACHE && c !== CACHE_CATALOGO)
+            .map((c) => caches.delete(c)),
+        ),
       )
       .then(() => self.clients.claim()),
   );
@@ -31,6 +48,20 @@ self.addEventListener('activate', (evento) => {
 self.addEventListener('fetch', (evento) => {
   const peticion = evento.request;
   if (peticion.method !== 'GET' || new URL(peticion.url).origin !== self.location.origin) return;
+
+  if (peticion.url === URL_CATALOGO) {
+    // Se responde al instante con el catálogo guardado y se renueva por detrás para la próxima vez.
+    evento.respondWith(
+      caches.match(URL_CATALOGO, { cacheName: CACHE_CATALOGO }).then((guardado) => {
+        const renovado = renovarCatalogo();
+        if (!guardado) return renovado;
+        evento.waitUntil(renovado.catch(() => {}));
+        return guardado;
+      }),
+    );
+    return;
+  }
+
   evento.respondWith(
     caches.open(CACHE).then(async (cache) => {
       const guardada = await cache.match(peticion, { ignoreSearch: true });

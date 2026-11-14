@@ -26,7 +26,9 @@ function precacheServiceWorker(): Plugin {
     },
     closeBundle() {
       // Las fuentes .woff (de respaldo) no hacen falta: todo navegador con service worker lee .woff2.
-      const archivos = listar(salida).filter((f) => f !== 'sw.js' && !f.endsWith('.woff'));
+      // El catálogo va aparte (sw.js lo guarda y lo renueva por su cuenta): si entrara aquí, cada catálogo
+      // diario contaría como una versión nueva de la app.
+      const archivos = listar(salida).filter((f) => f !== 'sw.js' && f !== 'catalogo.json' && !f.endsWith('.woff'));
       const hash = createHash('sha256');
       for (const f of archivos) hash.update(f).update(readFileSync(join(salida, f)));
       const ruta = join(salida, 'sw.js');

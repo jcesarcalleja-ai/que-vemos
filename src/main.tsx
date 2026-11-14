@@ -8,17 +8,10 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
-// Sin conexión y con actualización automática (solo en la versión publicada, no en `npm run dev`).
+// Sin conexión (solo en la versión publicada, no en `npm run dev`). Una versión nueva se descarga por detrás y
+// se usa la próxima vez que se abra la app: nunca se recarga sola, para no cortar unos Duelos o un Match a medias.
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    // En la primera visita aún no hay service worker al mando: no hace falta recargar cuando lo coja.
-    const teniaControl = navigator.serviceWorker.controller !== null;
-    let recargando = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!teniaControl || recargando) return;
-      recargando = true;
-      location.reload(); // ha llegado una versión nueva: se abre ya con ella
-    });
     navigator.serviceWorker
       .register('./sw.js')
       .then((registro) => {
