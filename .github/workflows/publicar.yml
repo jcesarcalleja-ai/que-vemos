@@ -11,8 +11,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 # Una publicación a la vez; si llega otra, espera (no se cancela una a medias).
 concurrency:
@@ -26,7 +24,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
           cache: npm
       - run: npm ci
       - run: npm test
@@ -35,7 +33,6 @@ jobs:
         env:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
       - run: npm run build
-      - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
@@ -43,6 +40,10 @@ jobs:
   publicar:
     needs: construir
     runs-on: ubuntu-latest
+    # Solo este trabajo puede publicar; el que ejecuta código del repositorio con la clave no tiene esos permisos.
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.despliegue.outputs.page_url }}

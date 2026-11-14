@@ -46,7 +46,8 @@ Solo para mí y mi novia, en un mismo móvil. Sin cuentas ni contraseñas. Todo 
 ## Decisiones tomadas al implementar (suposiciones)
 
 - **Entre semana** = noches de domingo a jueves. **Tarde** = de 23:00 a 05:00, cualquier día. Si es entre semana o es tarde, se prefiere lo corto; viernes y sábado antes de las 23:00 da igual. Es una preferencia que suma o resta puntos, no un filtro.
-- **La propuesta es estable durante la misma noche**: abrir y cerrar la app no cambia el título (sería un botón "Otra" encubierto). Cambia al día siguiente o cuando ese título se marca como visto. Una "noche" va de 06:00 a 06:00.
+- **La propuesta es estable durante la misma noche**: abrir y cerrar la app no cambia el título (sería un botón "Otra" encubierto). Cambia al día siguiente o cuando ese título se marca como visto. Una "noche" va de 06:00 a 06:00. Dos excepciones aceptadas: viernes y sábado puede cambiar al dar las 23:00 (ahí empieza a preferir lo corto), y puede cambiar si entre medias se puntúan otros títulos o se juega un Match, porque los gustos han cambiado.
+- **«Ya la vi» en el Match durante el turno de `yo`**: el título que entra no lo ha visto ella, así que cuenta como un «no» suyo; el móvil no vuelve a ella.
 - **La propuesta varía de una noche a otra** aunque no se haya marcado nada: no repite el mismo título noche tras noche. La duración «tira hacia» lo corto, pero no hasta el punto de llenar la propuesta o los Duelos de títulos mediocres por ser cortos.
 - **«Elegir yo» descarta la propuesta**: el título que no convenció no entra en esos Duelos ni en ese Match.
 - **Modo pareja**: no se propone nada que haya visto o abandonado cualquiera de los dos, ni géneros "jamás" de ella. Los gustos de los dos cuentan.

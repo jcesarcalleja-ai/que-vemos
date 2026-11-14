@@ -31,7 +31,8 @@ function erroresFicha(f, tipo, anioMax) {
   return e;
 }
 
-function erroresTitulo(t, tipo, anioMax) {
+/** Errores de un título completo (vacía si cumple el contrato). */
+export function erroresTitulo(t, tipo, anioMax = new Date().getFullYear() + 2) {
   const e = erroresFicha(t, tipo, anioMax);
   if (t === null || typeof t !== 'object') return e;
   if (typeof t.nota !== 'number' || !(t.nota >= 0 && t.nota <= 10)) e.push(`nota fuera de 0-10: ${t.nota}`);

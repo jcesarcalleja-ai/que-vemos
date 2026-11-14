@@ -51,18 +51,21 @@ export function deslizar(p: PartidaMatch, perfil: Perfil, idTitulo: string, si: 
 }
 
 /**
- * "Ya la vi" en el Match: el título nuevo ocupa el sitio del viejo y empieza sin deslizar para los dos.
- * Pasa el `estado` ya con la nota. null si no hay recambio.
+ * "Ya la vi" en el Match, pulsado por `quien` está deslizando: el título nuevo ocupa el sitio del viejo y
+ * empieza sin deslizar. Si ya desliza `yo`, ella no llega a verlo: cuenta como un «no» suyo, para que el
+ * móvil no tenga que volver a ella. Pasa el `estado` ya con la nota. null si no hay recambio.
  */
 export function sustituirEnPartida(
   p: PartidaMatch,
   idViejo: string,
+  quien: Perfil,
   candidatos: Titulo[],
   estado: Estado,
   ahora: Date,
 ): PartidaMatch | null {
   const titulos = sustituirEnMatch(p.titulos, idViejo, candidatos, estado, ahora);
   if (!titulos) return null;
+  const nuevo = titulos[p.titulos.findIndex((t) => t.id === idViejo)]!;
   const sin = (d: Deslizados): Deslizados => Object.fromEntries(Object.entries(d).filter(([id]) => id !== idViejo));
-  return { titulos, ella: sin(p.ella), yo: sin(p.yo) };
+  return { titulos, ella: quien === 'yo' ? { ...sin(p.ella), [nuevo.id]: false } : sin(p.ella), yo: sin(p.yo) };
 }

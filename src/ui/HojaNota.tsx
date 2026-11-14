@@ -14,10 +14,17 @@ interface Props {
 /** «Ya la vi»: hoja que sube desde abajo pidiendo la nota. Se monta cuando hay que enseñarla. */
 export function HojaNota({ titulo, onNota, onAbandonada, onCerrar }: Props) {
   const dialogo = useRef<HTMLDialogElement>(null);
+  const focoAnterior = useRef<Element | null>(null);
 
   useEffect(() => {
     const d = dialogo.current;
+    focoAnterior.current ??= document.activeElement;
     if (d && !d.open) d.showModal();
+    // La hoja se cierra desmontándola, sin close(): el foco hay que devolverlo a mano al botón que la abrió.
+    return () => {
+      const anterior = focoAnterior.current;
+      if (anterior instanceof HTMLElement && anterior.isConnected) anterior.focus();
+    };
   }, []);
 
   return (

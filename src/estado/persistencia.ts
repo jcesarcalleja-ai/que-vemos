@@ -55,13 +55,23 @@ export function importarEstado(texto: string): Estado {
   };
 }
 
+/** Dónde se aparta lo guardado cuando no se puede leer, para no perderlo. */
+export const CLAVE_ILEGIBLE = `${CLAVE_ALMACEN}:ilegible`;
+
 /** Lee el estado guardado. Si no hay nada, o no se puede leer, devuelve el estado inicial. */
 export function leerEstado(almacen: Almacen | null): Estado {
+  let texto: string | null | undefined;
   try {
-    const texto = almacen?.getItem(CLAVE_ALMACEN);
+    texto = almacen?.getItem(CLAVE_ALMACEN);
     if (texto != null) return importarEstado(texto);
   } catch {
-    // Ilegible o almacén roto: se arranca de cero en vez de romper la app.
+    // Ilegible o almacén roto: se arranca de cero en vez de romper la app. El siguiente cambio va a
+    // sobrescribir lo guardado, así que antes se aparta en otra clave: las notas no se destruyen.
+    try {
+      if (texto != null) almacen?.setItem(CLAVE_ILEGIBLE, texto);
+    } catch {
+      // Si ni eso se puede guardar, no hay más que hacer.
+    }
   }
   return estadoInicial();
 }

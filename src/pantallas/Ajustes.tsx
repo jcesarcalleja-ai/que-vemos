@@ -42,7 +42,8 @@ export function Ajustes({ onVolver }: Props) {
     document.body.append(enlace);
     enlace.click();
     enlace.remove();
-    URL.revokeObjectURL(enlace.href);
+    // Con margen: algunos navegadores cancelan la descarga si la dirección se revoca al instante.
+    setTimeout(() => URL.revokeObjectURL(enlace.href), 10_000);
     setAviso({ tipo: 'info', titulo: 'Copia guardada', texto: 'Se ha descargado un archivo con tus notas y las de tu novia.' });
   }
 

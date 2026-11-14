@@ -75,7 +75,7 @@ export function Match({ titulos, onVolver }: Props) {
     const nuevo = valorar(estado, turno as Perfil, titulo, nota);
     cambiar(() => nuevo);
     setPuntuando(null);
-    const siguiente = sustituirEnPartida(partida!, titulo.id, titulos, nuevo, new Date());
+    const siguiente = sustituirEnPartida(partida!, titulo.id, turno as Perfil, titulos, nuevo, new Date());
     if (siguiente) setPartida(siguiente);
     else onVolver();
   }

@@ -12,7 +12,7 @@ import { mkdirSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { gunzipSync } from 'node:zlib';
-import { validarCatalogo } from './validar-catalogo.mjs';
+import { erroresTitulo, validarCatalogo } from './validar-catalogo.mjs';
 
 const SALIDA = fileURLToPath(new URL('../public/catalogo.json', import.meta.url));
 
@@ -39,7 +39,7 @@ const LISTAS = {
 };
 const NOTA_TMDB_MIN = 6.3; // en el filtro de TMDB
 const NOTA_MIN = 6.0; // sobre la nota final (IMDb si la hay)
-const MINIMO = { pelis: 300, series: 150, porPlataforma: 20 }; // por debajo, algo va mal: error
+const MINIMO = { pelis: 300, series: 150, porPlataforma: 20, conocidos: 15 }; // por debajo, algo va mal: error
 
 // Títulos muy conocidos para el primer swipe (id de TMDB), estén o no en las plataformas.
 const CONOCIDOS = {
@@ -110,7 +110,7 @@ export function elegirTrailer(videos, idiomaOriginal) {
     return lugar * 2 + (v.type === 'Trailer' ? 0 : 1);
   };
   const mejor = videos
-    .filter((v) => v.site === 'YouTube' && v.key && (v.type === 'Trailer' || v.type === 'Teaser'))
+    .filter((v) => v.site === 'YouTube' && /^[\w-]{6,}$/.test(v.key ?? '') && (v.type === 'Trailer' || v.type === 'Teaser'))
     .sort((a, b) => rango(a) - rango(b) || Number(b.official) - Number(a.official) || String(b.published_at).localeCompare(String(a.published_at)))[0];
   return mejor ? `https://www.youtube.com/watch?v=${mejor.key}` : null;
 }
@@ -289,7 +289,7 @@ export async function generar() {
   const imdbIds = new Set(fichas.map((d) => d?.imdb).filter(Boolean));
   const notas = await notasImdb(imdbIds);
 
-  const titulos = [];
+  let titulos = [];
   fichas.forEach((d, i) => {
     if (!d?.overview?.trim() || !d.poster_path) return;
     const { tipo, plataformas } = candidatos[i];
@@ -309,21 +309,32 @@ export async function generar() {
   const netflix = await idsNetflix(titulos.filter((t) => t.plataforma === 'netflix' && t._imdb).map((t) => t._imdb));
   for (const t of titulos) {
     const ficha = t.plataforma === 'netflix' && netflix.get(t._imdb);
-    t.enlace = ficha ? `https://www.netflix.com/title/${ficha}` : BUSQUEDA[t.plataforma](encodeURIComponent(t.titulo));
+    t.enlace = /^\d+$/.test(ficha || '') ? `https://www.netflix.com/title/${ficha}` : BUSQUEDA[t.plataforma](encodeURIComponent(t.titulo));
   }
   const ordenar = (a, b) => b.nota - a.nota || a.titulo.localeCompare(b.titulo, 'es');
   const publico = ({ imdb: _a, _imdb, ...resto }) => resto; // lo que no es del contrato no va al archivo
 
-  const conocidos = await enParalelo(
-    Object.entries(CONOCIDOS).flatMap(([tipo, ids]) => ids.map((id) => ({ tipo, id }))),
-    8,
-    async ({ tipo, id }) => {
-      const d = await detalle(tmdb, tipo, id);
-      const f = d && titulo(d, tipo);
-      if (!f?.poster || f.generos.length === 0 || !f.anio) throw new Error(`No se pudo preparar el título conocido ${tipo}-${id}`);
-      return f;
-    },
-  );
+  // Un título con un dato raro se descarta él solo: no debe dejar sin catálogo a todos los demás.
+  titulos = titulos.filter((t) => {
+    const errores = erroresTitulo(publico(t), t.tipo);
+    if (errores.length) console.warn(`Aviso: se descarta ${t.id} (${t.titulo}): ${errores.join('; ')}`);
+    return errores.length === 0;
+  });
+
+  const conocidos = (
+    await enParalelo(
+      Object.entries(CONOCIDOS).flatMap(([tipo, ids]) => ids.map((id) => ({ tipo, id }))),
+      8,
+      async ({ tipo, id }) => {
+        const d = await detalle(tmdb, tipo, id);
+        const f = d && titulo(d, tipo);
+        if (f?.poster && f.generos.length > 0 && f.anio) return f;
+        console.warn(`Aviso: no se pudo preparar el título conocido ${tipo}-${id}; se omite.`);
+        return null;
+      },
+    )
+  ).filter(Boolean);
+  if (conocidos.length < MINIMO.conocidos) throw new Error(`Solo ${conocidos.length} títulos conocidos (mínimo ${MINIMO.conocidos}). No se escribe nada.`);
   // Pelis y series alternadas, para que el swipe inicial no sea una tanda de lo mismo.
   const pc = conocidos.filter((f) => f.tipo === 'peli');
   const sc = conocidos.filter((f) => f.tipo === 'serie');

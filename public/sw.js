@@ -10,10 +10,16 @@ const CACHE = `que-vemos-${VERSION}`;
 const CACHE_CATALOGO = 'que-vemos-catalogo';
 const URL_CATALOGO = new URL('catalogo.json', self.location.href).href;
 
-/** Descarga el catálogo y lo guarda. `no-cache` obliga a preguntar al servidor si hay uno nuevo. */
+/**
+ * Descarga el catálogo y lo guarda. `no-cache` obliga a preguntar al servidor si hay uno nuevo.
+ * Solo se guarda si de verdad es un catálogo: una wifi con portal de acceso devuelve su página con un 200.
+ */
 async function renovarCatalogo() {
   const respuesta = await fetch(URL_CATALOGO, { cache: 'no-cache' });
-  if (respuesta.ok) await (await caches.open(CACHE_CATALOGO)).put(URL_CATALOGO, respuesta.clone());
+  const datos = respuesta.ok ? await respuesta.clone().json().catch(() => null) : null;
+  if (Array.isArray(datos?.pelis) && Array.isArray(datos.series) && Array.isArray(datos.conocidos)) {
+    await (await caches.open(CACHE_CATALOGO)).put(URL_CATALOGO, respuesta.clone());
+  }
   return respuesta;
 }
 

@@ -72,7 +72,7 @@ describe('Match: «Ya la vi»', () => {
     p = deslizar(p, 'ella', inicial[0]!.id, true);
     const viejo = inicial[1]!;
     const conNota = valorar(estado, 'ella', viejo, 9);
-    const nueva = sustituirEnPartida(p, viejo.id, candidatos, conNota, MARTES_21)!;
+    const nueva = sustituirEnPartida(p, viejo.id, 'ella', candidatos, conNota, MARTES_21)!;
 
     expect(nueva.titulos).toHaveLength(10);
     expect(nueva.titulos[1]!.id).not.toBe(viejo.id);
@@ -85,16 +85,29 @@ describe('Match: «Ya la vi»', () => {
   it('olvida lo que se había deslizado del título viejo', () => {
     let p = nuevaPartida(inicial);
     for (const perfil of ['ella', 'yo'] as const) p = deslizar(p, perfil, inicial[2]!.id, true);
-    const conNota = valorar(estado, 'yo', inicial[2]!, 3);
-    const nueva = sustituirEnPartida(p, inicial[2]!.id, candidatos, conNota, MARTES_21)!;
+    const conNota = valorar(estado, 'ella', inicial[2]!, 3);
+    const nueva = sustituirEnPartida(p, inicial[2]!.id, 'ella', candidatos, conNota, MARTES_21)!;
     expect(nueva.ella).toEqual({});
     expect(nueva.yo).toEqual({});
+  });
+
+  it('si lo pulsa yo en su turno, el móvil no vuelve a ella: el título nuevo cuenta como un «no» suyo', () => {
+    let p = nuevaPartida(inicial);
+    for (const t of inicial) p = deslizar(p, 'ella', t.id, true);
+    for (const t of inicial.slice(0, 3)) p = deslizar(p, 'yo', t.id, false);
+    const viejo = inicial[3]!;
+    const nueva = sustituirEnPartida(p, viejo.id, 'yo', candidatos, valorar(estado, 'yo', viejo, 8), MARTES_21)!;
+
+    const nuevo = nueva.titulos[3]!;
+    expect(nuevo.id).not.toBe(viejo.id);
+    expect(nueva.ella[nuevo.id]).toBe(false);
+    expect(turnoMatch(nueva)).toMatchObject({ turno: 'yo', numero: 4, pendiente: nuevo });
   });
 
   it('devuelve null si no queda ningún recambio', () => {
     const sin = nuevaPartida(inicial);
     const conNota = valorar(estado, 'ella', inicial[0]!, 5);
-    expect(sustituirEnPartida(sin, inicial[0]!.id, inicial, conNota, MARTES_21)).toBeNull();
+    expect(sustituirEnPartida(sin, inicial[0]!.id, 'ella', inicial, conNota, MARTES_21)).toBeNull();
   });
 });
 

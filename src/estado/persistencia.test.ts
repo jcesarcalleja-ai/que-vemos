@@ -3,6 +3,7 @@ import type { Estado, Ficha } from '../tipos';
 import { apuntarGesto, cambiarModo, cambiarTipo, estadoInicial, fijarJamas, marcarInicioHecho, valorar } from './estado';
 import {
   CLAVE_ALMACEN,
+  CLAVE_ILEGIBLE,
   exportarEstado,
   guardarEstado,
   importarEstado,
@@ -65,8 +66,12 @@ describe('guardar y leer', () => {
     ['basura', 'esto no es json {{{'],
     ['JSON de otra forma', '{"hola": 1}'],
     ['una nota inválida', archivoCon((e) => (e.perfiles.yo.valoraciones['peli-1'].nota = 99))],
-  ])('con datos ilegibles (%s) arranca con el estado inicial', (_nombre, texto) => {
-    expect(leerEstado(almacenFalso({ [CLAVE_ALMACEN]: texto }))).toEqual(estadoInicial());
+  ])('con datos ilegibles (%s) arranca con el estado inicial y aparta lo que había', (_nombre, texto) => {
+    const almacen = almacenFalso({ [CLAVE_ALMACEN]: texto });
+    expect(leerEstado(almacen)).toEqual(estadoInicial());
+    // El siguiente cambio sobrescribe lo guardado: lo ilegible tiene que seguir en algún sitio.
+    guardarEstado(estadoInicial(), almacen);
+    expect(almacen.datos[CLAVE_ILEGIBLE]).toBe(texto);
   });
 
   it('si el almacén lanza al leer, arranca con el estado inicial', () => {
