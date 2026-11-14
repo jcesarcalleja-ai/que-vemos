@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Ficha, Titulo } from '../tipos';
-import { crearCatalogo } from './catalogo';
+import { cargarCatalogo } from './catalogo';
 
 const peli: Titulo = {
   id: 'peli-238',
@@ -29,28 +29,16 @@ const json = (cuerpo: unknown, estado = 200) => Promise.resolve(new Response(JSO
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('catálogo real', () => {
-  it('devuelve pelis, series y conocidos del archivo, con una sola descarga y una ruta relativa', async () => {
+describe('cargarCatalogo', () => {
+  it('devuelve pelis, series y conocidos del archivo, pedido con una ruta relativa', async () => {
     const fetchSimulado = simularFetch(() => json(archivo));
-    const catalogo = crearCatalogo();
 
-    const [pelis, series, conocidos] = await Promise.all([catalogo.disponibles('peli'), catalogo.disponibles('serie'), catalogo.conocidos()]);
-    await catalogo.disponibles('peli');
+    const datos = await cargarCatalogo();
 
-    expect(pelis).toEqual([peli]);
-    expect(series).toEqual([serie]);
-    expect(conocidos).toEqual([conocida]);
-    expect(fetchSimulado).toHaveBeenCalledTimes(1);
+    expect(datos.pelis).toEqual([peli]);
+    expect(datos.series).toEqual([serie]);
+    expect(datos.conocidos).toEqual([conocida]);
     expect(fetchSimulado.mock.calls[0][0]).toBe('catalogo.json');
-  });
-
-  it('si quien lo usa ordena la lista, el catálogo no cambia', async () => {
-    simularFetch(() => json({ ...archivo, pelis: [peli, { ...peli, id: 'peli-1' }] }));
-    const catalogo = crearCatalogo();
-
-    (await catalogo.disponibles('peli')).reverse();
-
-    expect((await catalogo.disponibles('peli')).map((t) => t.id)).toEqual(['peli-238', 'peli-1']);
   });
 
   it.each([
@@ -58,7 +46,7 @@ describe('catálogo real', () => {
     ['el servidor responde con error', () => json({}, 404)],
   ])('si %s, falla con un mensaje en español para el usuario', async (_caso, respuesta) => {
     simularFetch(respuesta);
-    await expect(crearCatalogo().disponibles('peli')).rejects.toThrow(/No se pudo cargar el catálogo.*conexión/);
+    await expect(cargarCatalogo()).rejects.toThrow(/No se pudo cargar el catálogo.*conexión/);
   });
 
   it.each([
@@ -66,16 +54,6 @@ describe('catálogo real', () => {
     ['le faltan las listas', () => json({ generado: 'hoy' })],
   ])('si el archivo %s, falla con un mensaje legible', async (_caso, respuesta) => {
     simularFetch(respuesta);
-    await expect(crearCatalogo().conocidos()).rejects.toThrow(/catálogo de títulos no es válido/);
-  });
-
-  it('tras un fallo, el siguiente intento vuelve a descargar', async () => {
-    let intento = 0;
-    const fetchSimulado = simularFetch(() => (++intento === 1 ? Promise.reject(new TypeError('Failed to fetch')) : json(archivo)));
-    const catalogo = crearCatalogo();
-
-    await expect(catalogo.disponibles('serie')).rejects.toThrow();
-    expect(await catalogo.disponibles('serie')).toEqual([serie]);
-    expect(fetchSimulado).toHaveBeenCalledTimes(2);
+    await expect(cargarCatalogo()).rejects.toThrow(/catálogo de títulos no es válido/);
   });
 });

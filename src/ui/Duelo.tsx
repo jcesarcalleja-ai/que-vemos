@@ -3,18 +3,16 @@ import { Boton } from './Boton';
 import { MetaTitulo } from './InfoTitulo';
 import { Poster } from './Poster';
 
-export type Ronda = 'cuartos' | 'semifinal' | 'final';
-
-const NOMBRE_RONDA: Record<Ronda, string> = {
+const NOMBRE_RONDA = {
   cuartos: 'Cuartos de final',
-  semifinal: 'Semifinal',
+  semis: 'Semifinal',
   final: 'Final',
 };
 
 interface Props {
   a: Titulo;
   b: Titulo;
-  ronda: Ronda;
+  ronda: keyof typeof NOMBRE_RONDA;
   /** Se toca un título para elegirlo. */
   onElegir: (elegido: Titulo) => void;
   onYaLaVi: (titulo: Titulo) => void;

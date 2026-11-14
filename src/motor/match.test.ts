@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { estadoVacio, MARTES_21, peli, pelisConNotaCreciente, valorar, vetar } from './datos-prueba';
+import { fijarJamas, valorar } from '../estado';
+import { estadoVacio, MARTES_21, peli, pelisConNotaCreciente } from './datos-prueba';
 import { crearMatch, ganadoraMatch, sustituirEnMatch } from './match';
 
 const ahora = MARTES_21;
@@ -8,7 +9,7 @@ const estado = estadoVacio('pareja');
 describe('Match: elección de los 10', () => {
   it('saca 10 títulos distintos, los mejores, sin vistos ni "jamás" de ella', () => {
     const candidatos = [...pelisConNotaCreciente(16), peli('terror', { generos: ['Terror'], nota: 20 })];
-    let e = vetar(estado, 'ella', 'Terror');
+    let e = fijarJamas(estado, 'ella', ['Terror']);
     e = valorar(e, 'yo', candidatos[15], 8); // la de mejor nota entre las normales
     e = valorar(e, 'ella', candidatos[14], 'abandonada');
 
@@ -89,7 +90,7 @@ describe('Match: "Ya la vi" sustituye un título', () => {
   it('respeta los "jamás" y lo visto por cualquiera de los dos al elegir el recambio', () => {
     const extra = [peli('terror', { generos: ['Terror'], nota: 30 }), peli('visto', { nota: 29 })];
     const todos = [...candidatos, ...extra];
-    let e = vetar(estado, 'ella', 'Terror');
+    let e = fijarJamas(estado, 'ella', ['Terror']);
     e = valorar(e, 'yo', extra[1], 9);
     const match = crearMatch(todos, e, ahora)!;
     const nuevo = sustituirEnMatch(match, match[0].id, todos, valorar(e, 'yo', match[0], 8), ahora)!;

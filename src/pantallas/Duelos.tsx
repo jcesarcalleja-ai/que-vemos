@@ -2,16 +2,10 @@ import { useState } from 'react';
 import { useEstado, valorar } from '../estado';
 import { crearTorneo, elegirEnDuelo, situacionTorneo, sustituirEnTorneo, TITULOS_DUELOS } from '../motor';
 import type { Titulo } from '../tipos';
-import { Duelo, Mensaje, Pantalla, type Ronda } from '../ui';
+import { Duelo, Mensaje, Pantalla } from '../ui';
 import { Barra, useArriba } from './Barra';
 import { Ganadora } from './Ganadora';
 import { HojaYaLaVi } from './HojaYaLaVi';
-
-const RONDA: Record<'cuartos' | 'semis' | 'final', Ronda> = {
-  cuartos: 'cuartos',
-  semis: 'semifinal',
-  final: 'final',
-};
 
 interface Props {
   /** Los títulos disponibles del tipo elegido. */
@@ -39,9 +33,8 @@ export function Duelos({ titulos, onVolver }: Props) {
   }
 
   const situacion = situacionTorneo(torneo);
-  if (situacion.ganadora) return <Ganadora titulo={situacion.ganadora} onVolver={onVolver} />;
-  const [a, b] = situacion.par!;
-  const ronda = RONDA[situacion.ronda as keyof typeof RONDA];
+  if (situacion.ronda === 'terminado') return <Ganadora titulo={situacion.ganadora} onVolver={onVolver} />;
+  const [a, b] = situacion.par;
 
   /** «Ya la vi» sustituye el título por otro que no esté en el torneo; si no hay recambio, se vuelve. */
   function puntuar(titulo: Titulo, nota: number | 'abandonada') {
@@ -58,7 +51,7 @@ export function Duelos({ titulos, onVolver }: Props) {
       <Duelo
         a={a}
         b={b}
-        ronda={ronda}
+        ronda={situacion.ronda}
         onElegir={(elegido) => setTorneo(elegirEnDuelo(torneo, elegido.id))}
         onYaLaVi={setPuntuando}
       />

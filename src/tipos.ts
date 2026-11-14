@@ -60,14 +60,6 @@ export interface Titulo extends Ficha {
   episodios?: number;
 }
 
-/** De dónde salen los títulos. */
-export interface Catalogo {
-  /** Títulos disponibles ahora en las cuatro plataformas (España). */
-  disponibles(tipo: Tipo): Promise<Titulo[]>;
-  /** Unos 20 títulos muy conocidos, pelis y series mezcladas, para el swipe inicial. */
-  conocidos(): Promise<Ficha[]>;
-}
-
 /** Lo que alguien opina de un título que ya vio. */
 export interface Valoracion {
   tipo: Tipo;

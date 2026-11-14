@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type { Ficha } from '../tipos';
 import {
   apuntarGesto,
-  cambiarModo,
-  cambiarTipo,
   estadoInicial,
   fijarJamas,
   marcarInicioHecho,
@@ -39,13 +37,6 @@ describe('estadoInicial', () => {
 });
 
 describe('operaciones', () => {
-  it('cambian el interruptor de tipo y el de modo', () => {
-    const e = estadoInicial();
-    expect(cambiarTipo(e, 'serie').tipo).toBe('serie');
-    expect(cambiarModo(e, 'pareja').modo).toBe('pareja');
-    expect(cambiarTipo(e, 'serie').modo).toBe('solo');
-  });
-
   it('valorar apunta la nota solo en el perfil indicado, con los datos de la ficha', () => {
     const e = valorar(estadoInicial(), 'ella', ficha, 8);
     expect(e.perfiles.ella.valoraciones['peli-1']).toEqual({
@@ -92,28 +83,18 @@ describe('operaciones', () => {
     expect(e.perfiles.ella.inicioHecho).toBe(false);
   });
 
-  it('ninguna operación muta el estado de entrada ni los datos que se le pasan', () => {
+  it('el estado nuevo no muta el original ni comparte listas con lo que se le pasó', () => {
     const original = estadoInicial();
     const copia = structuredClone(original);
     const jamas = ['Terror' as const];
-    const fichaCopia = structuredClone(ficha);
+    const generos = [...ficha.generos];
 
-    const e = [
-      cambiarTipo(original, 'serie'),
-      cambiarModo(original, 'pareja'),
-      valorar(original, 'yo', ficha, 9),
-      apuntarGesto(original, 'ella', ficha, true),
-      fijarJamas(original, 'ella', jamas),
-      marcarInicioHecho(original, 'yo'),
-    ];
+    const e = fijarJamas(valorar(original, 'yo', { ...ficha, generos }, 9), 'ella', jamas);
+    jamas.push('Bélica' as never);
+    generos.push('Drama');
 
     expect(original).toEqual(copia);
-    expect(ficha).toEqual(fichaCopia);
-    // El estado nuevo no comparte listas con lo que se le pasó: cambiarlas después no lo altera.
-    jamas.push('Bélica' as never);
-    ficha.generos.push('Drama');
-    expect(e[4].perfiles.ella.jamas).toEqual(['Terror']);
-    expect(e[2].perfiles.yo.valoraciones['peli-1'].generos).toEqual(['Terror', 'Ciencia ficción']);
-    ficha.generos.pop();
+    expect(e.perfiles.ella.jamas).toEqual(['Terror']);
+    expect(e.perfiles.yo.valoraciones['peli-1'].generos).toEqual(['Terror', 'Ciencia ficción']);
   });
 });

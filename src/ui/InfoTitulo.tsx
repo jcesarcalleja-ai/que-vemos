@@ -6,10 +6,6 @@ interface Props {
   titulo: Ficha | Titulo;
   /** Líneas de sinopsis antes de recortar (por defecto 3). */
   lineas?: number;
-  /** Etiqueta del encabezado (h2 por defecto). */
-  nivel?: 'h2' | 'h3';
-  /** Sin la línea de sinopsis. */
-  sinSinopsis?: boolean;
 }
 
 /** Una línea con año, duración, nota y plataforma. */
@@ -35,13 +31,13 @@ export function MetaTitulo({ titulo }: { titulo: Ficha | Titulo }) {
 }
 
 /** Título, año, duración, nota, plataforma y sinopsis recortada. Con una `Ficha` enseña los géneros. */
-export function InfoTitulo({ titulo, lineas = 3, nivel: Nivel = 'h2', sinSinopsis }: Props) {
+export function InfoTitulo({ titulo, lineas = 3 }: Props) {
   const completo = esTitulo(titulo) ? titulo : null;
   return (
     <div>
-      <Nivel className="titulo__nombre">{titulo.titulo}</Nivel>
+      <h2 className="titulo__nombre">{titulo.titulo}</h2>
       <MetaTitulo titulo={titulo} />
-      {completo && !sinSinopsis && (
+      {completo && (
         <p className="sinopsis" style={{ '--lineas': lineas } as CSSProperties}>
           {completo.sinopsis}
         </p>

@@ -5,8 +5,6 @@ export {
   situacionTorneo,
   sustituirEnTorneo,
   TITULOS_DUELOS,
-  type Ronda,
-  type SituacionTorneo,
   type Torneo,
 } from './duelos';
 export {

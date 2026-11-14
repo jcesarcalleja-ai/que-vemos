@@ -3,21 +3,15 @@
 
 import type { Estado, Genero, Perfil, Titulo } from '../tipos';
 
-// Cómo se reparte el peso. Cada título tiene un MÉRITO (gustos + nota + lo corto) y, de entre los de más mérito,
-// cada noche le toca a unos: ahí está la variedad. Para dar más o menos peso a cada cosa, toca estas constantes:
-//   gustos    PESO_GUSTOS (lo que enseñan las notas) y PESO_GESTO (lo que enseña un gesto del Match)
-//   nota      PESO_NOTA, PESO_NOTA_ALTA, NOTA_MINIMA, NOTA_TOPE y CASTIGO_NOTA_BAJA
-//   lo corto  PESO_DURACION
-//   variedad  TURNO_MINIMO y TURNO_POR_TITULO: cuántos de los mejores se turnan (más = más variedad, menos calidad);
-//             MARGEN_TURNO: lo lejos del mejor que puede estar uno para turnarse
+// Cada título tiene un MÉRITO (gustos + nota + lo corto); de los TURNO de más mérito, cada noche toca una ventana
+// distinta: ahí está la variedad. Para dar más o menos peso a cada cosa, toca estas constantes:
+// PESO_GUSTOS, PESO_GESTO, PESO_NOTA_ALTA, NOTA_MINIMA, NOTA_TOPE, CASTIGO_NOTA_BAJA, PESO_DURACION, TURNO y MARGEN_TURNO.
 // Un punto de mérito equivale a un punto de nota general entre NOTA_MINIMA y NOTA_TOPE.
 
 /** Máximo de puntos que dan los gustos: afinidad de -1 (lo evitas) a 1 (lo que más te gusta) por este peso. */
 const PESO_GUSTOS = 3.5;
 /** Cuánto vale un gesto del Match frente a una nota (señal más débil). */
 const PESO_GESTO = 0.25;
-/** Puntos por cada punto de nota general entre NOTA_MINIMA y NOTA_TOPE. */
-const PESO_NOTA = 1;
 /** Por encima de NOTA_TOPE la nota casi no cuenta: un 9,3 no debe ganar siempre a un 8,6, o saldría cada noche. */
 const PESO_NOTA_ALTA = 0.3;
 const NOTA_MINIMA = 7.5;
@@ -29,14 +23,10 @@ const CASTIGO_NOTA_BAJA = 6;
  * todo con una nota de NOTA_TOPE o más, nada con NOTA_MINIMA o menos. Solo empuja a lo que ya es bueno.
  */
 const PESO_DURACION = 4.25;
-/** Cuántos de los mejores se turnan: al menos esto, y 1,5 veces los que se piden (8 en Duelos, 10 en Match). */
-const TURNO_MINIMO = 13;
-const TURNO_POR_TITULO = 1.5;
+/** Cuántos de los mejores se turnan (más = más variedad, menos calidad). */
+const TURNO = 15;
 /** Y solo entra al turno quien no esté a más de estos puntos del mejor: si no hay bastantes parecidos, se toman los mejores. */
 const MARGEN_TURNO = 6;
-/** Paso entre noches y entre puestos del turno: irracionales, para que no se repitan en noches seguidas. */
-const PASO_NOCHE = 0.6180339887;
-const PASO_PUESTO = 0.41421356237;
 const PELI_CORTA_MIN = 105;
 const SERIE_CORTA_EPISODIOS = 10;
 
@@ -44,7 +34,7 @@ const HORAS_NOCHE_EMPIEZA = 6;
 const MS_DIA = 86_400_000;
 
 /** Perfiles cuyos datos cuentan: solo `yo` en solo; los dos en pareja. */
-export function perfilesActivos(estado: Estado): Perfil[] {
+function perfilesActivos(estado: Estado): Perfil[] {
   return estado.modo === 'pareja' ? ['yo', 'ella'] : ['yo'];
 }
 
@@ -88,12 +78,12 @@ function gustosPorGenero(estado: Estado): Map<Genero, number> {
 
 /** Puntos de la nota general: lineales, más suaves por encima de NOTA_TOPE y con castigo por debajo de NOTA_MINIMA. */
 function puntosNota(nota: number): number {
-  const puntos = (Math.min(nota, NOTA_TOPE) - NOTA_MINIMA) * PESO_NOTA + Math.max(0, nota - NOTA_TOPE) * PESO_NOTA_ALTA;
+  const puntos = Math.min(nota, NOTA_TOPE) - NOTA_MINIMA + Math.max(0, nota - NOTA_TOPE) * PESO_NOTA_ALTA;
   return nota < NOTA_MINIMA ? puntos - CASTIGO_NOTA_BAJA : puntos;
 }
 
 /** Devuelve la función que puntúa el mérito de un título (más es mejor) para este estado y este momento. */
-export function crearPuntuador(estado: Estado, ahora: Date): (t: Titulo) => number {
+function crearPuntuador(estado: Estado, ahora: Date): (t: Titulo) => number {
   const gustos = gustosPorGenero(estado);
   const corto = prefiereCorto(ahora);
 
@@ -140,8 +130,9 @@ export function elegibles(
 
 /**
  * Los `n` que se ponen delante esta noche, de más a menos mérito.
- * Se turnan los de más mérito (TURNO_MINIMO o 1,5 × n): cada noche toca un grupo distinto y fijo, así que sin
- * marcar nada cambian de una noche a otra, ninguno se repite pronto y todos son buenos. Sin azar ni reloj.
+ * Cada noche toca una ventana de `n` puestos seguidos del turno (dando la vuelta al llegar al final) que se mueve
+ * 23 puestos por noche: sin marcar nada cambian de una noche a otra y todos son buenos. Sin azar ni reloj.
+ * 23 es primo y mayor que TURNO: nunca es múltiplo del tamaño del turno, así que la ventana no se queda clavada.
  */
 export function mejores(
   candidatos: Titulo[],
@@ -152,15 +143,10 @@ export function mejores(
 ): Titulo[] {
   const ordenados = conPuntos(elegibles(candidatos, estado, excluirIds), estado, ahora);
   const corte = (ordenados[0]?.puntos ?? 0) - MARGEN_TURNO;
-  const turno = ordenados
-    .slice(0, Math.max(TURNO_MINIMO, Math.ceil(TURNO_POR_TITULO * n)))
-    .filter((x) => x.puntos >= corte);
+  const turno = ordenados.slice(0, TURNO).filter((x) => x.puntos >= corte);
   if (turno.length <= n) return ordenados.slice(0, n).map((x) => x.titulo);
-  const { numero } = noche(ahora);
-  return turno
-    .map((x, puesto) => ({ titulo: x.titulo, puesto, orden: (puesto * PASO_PUESTO + numero * PASO_NOCHE) % 1 }))
-    .sort((a, b) => b.orden - a.orden)
-    .slice(0, n)
-    .sort((a, b) => a.puesto - b.puesto)
-    .map((x) => x.titulo);
+  const inicio = (noche(ahora).numero * 23) % turno.length;
+  return Array.from({ length: n }, (_, i) => (inicio + i) % turno.length)
+    .sort((a, b) => a - b)
+    .map((puesto) => turno[puesto].titulo);
 }

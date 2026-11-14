@@ -2,7 +2,7 @@
 
 import type { DatosPerfil, Estado, Ficha, Genero, Modo, Perfil, Tipo } from '../tipos';
 
-export function perfilVacio(): DatosPerfil {
+function perfilVacio(): DatosPerfil {
   return { valoraciones: {}, gestos: {}, jamas: [], inicioHecho: false };
 }
 

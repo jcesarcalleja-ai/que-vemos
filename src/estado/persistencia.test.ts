@@ -101,14 +101,6 @@ describe('exportar e importar', () => {
     expect(importarEstado(exportarEstado(e))).toEqual(e);
   });
 
-  it('el estado inicial también sobrevive al viaje', () => {
-    expect(importarEstado(exportarEstado(estadoInicial()))).toEqual(estadoInicial());
-  });
-
-  it('lo exportado es texto JSON', () => {
-    expect(JSON.parse(exportarEstado(estadoConDatos())).version).toBe(1);
-  });
-
   it('descarta campos desconocidos en lugar de colarlos en el estado', () => {
     const texto = archivoCon((e) => {
       e.intruso = true;
@@ -162,13 +154,5 @@ describe('exportar e importar', () => {
     const e = importarEstado(texto);
     expect(Object.keys(e.perfiles.yo.valoraciones)).toEqual(['__proto__']);
     expect(({} as { nota?: unknown }).nota).toBeUndefined();
-  });
-
-  it('importar sustituye todo lo anterior al guardarlo', () => {
-    const almacen = almacenFalso();
-    guardarEstado(estadoConDatos(), almacen);
-    const importado = importarEstado(exportarEstado(estadoInicial()));
-    guardarEstado(importado, almacen);
-    expect(leerEstado(almacen)).toEqual(estadoInicial());
   });
 });

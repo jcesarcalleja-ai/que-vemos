@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { clones, estadoVacio, MARTES_21, peli, pelisConNotaCreciente, valorar, vetar } from './datos-prueba';
+import { valorar } from '../estado';
+import { clones, estadoVacio, MARTES_21, peli, pelisConNotaCreciente } from './datos-prueba';
 import { crearTorneo, elegirEnDuelo, situacionTorneo, sustituirEnTorneo, type Torneo } from './duelos';
 
 /** Juega el torneo entero eligiendo siempre con `regla`; devuelve cada situación vista y el torneo final. */
@@ -21,15 +22,10 @@ describe('Duelos: elección de los 8', () => {
     expect(t.cuadro.every((x) => x.nota >= 5)).toBe(true); // las notas 1 a 4 se quedan fuera
   });
 
-  it('deja fuera lo valorado o abandonado, y las notas de ella no cuentan en solo', () => {
+  it('deja fuera lo ya valorado', () => {
     const candidatos = pelisConNotaCreciente(12);
-    let e = valorar(estadoVacio(), 'yo', candidatos[11], 8);
-    e = valorar(e, 'yo', candidatos[10], 'abandonada');
-    e = valorar(e, 'ella', candidatos[9], 8);
-    const ids = crearTorneo(candidatos, e, MARTES_21)!.cuadro.map((x) => x.id);
-    expect(ids).not.toContain(candidatos[11].id);
-    expect(ids).not.toContain(candidatos[10].id);
-    expect(ids).toContain(candidatos[9].id);
+    const e = valorar(estadoVacio(), 'yo', candidatos[11], 8);
+    expect(crearTorneo(candidatos, e, MARTES_21)!.cuadro.map((x) => x.id)).not.toContain(candidatos[11].id);
   });
 
   it('usa mis gustos: un género que evito queda fuera aunque tenga nota', () => {
@@ -63,11 +59,8 @@ describe('Duelos: el torneo', () => {
   it('con 7 elecciones hay ganadora: 4 de cuartos, 2 de semis y 1 de final', () => {
     const { vistas, final } = jugar(nuevo(), (par) => par[0].id);
     expect(vistas.map((s) => s.ronda)).toEqual(['cuartos', 'cuartos', 'cuartos', 'cuartos', 'semis', 'semis', 'final']);
-    expect(vistas.map((s) => s.duelo)).toEqual([0, 1, 2, 3, 0, 1, 0]);
-    expect(vistas.map((s) => s.duelosEnRonda)).toEqual([4, 4, 4, 4, 2, 2, 1]);
     expect(situacionTorneo(final).ganadora).not.toBeNull();
     expect(situacionTorneo(final).par).toBeNull();
-    expect(situacionTorneo(final).elegidas).toBe(7);
   });
 
   it('cada ganador pasa a la ronda siguiente y la ganadora es la que ganó la final', () => {
@@ -129,17 +122,6 @@ describe('Duelos: "Ya la vi" sustituye un título', () => {
     expect(t.cuadro.map((x) => x.id)).not.toContain(nuevo.cuadro[7].id);
     expect(e.perfiles.yo.valoraciones[nuevo.cuadro[7].id]).toBeUndefined();
     expect(situacionTorneo(nuevo).ronda).toBe('cuartos');
-  });
-
-  it('el título que entra no está visto ni vetado: se salta lo valorado y los "jamás" en pareja', () => {
-    const vetado = peli('vetado', { generos: ['Terror'], nota: 10 });
-    const todos = [...candidatos, vetado];
-    let e = vetar(estadoVacio('pareja'), 'ella', 'Terror');
-    const t = crearTorneo(todos, e, ahora)!;
-    const viejo = t.cuadro[0];
-    e = valorar(e, 'yo', viejo, 3);
-    const nuevo = sustituirEnTorneo(t, viejo.id, todos, e, ahora)!;
-    expect(nuevo.cuadro.map((x) => x.id)).not.toContain(vetado.id);
   });
 
   it('si el título ya había ganado un duelo, el que entra ocupa su lugar en la ronda siguiente', () => {

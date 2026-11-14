@@ -1,6 +1,6 @@
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from 'react';
 
-export type VarianteBoton = 'primario' | 'secundario' | 'fantasma' | 'si' | 'no';
+type VarianteBoton = 'primario' | 'secundario' | 'fantasma' | 'si' | 'no';
 
 interface Comun {
   variante?: VarianteBoton;

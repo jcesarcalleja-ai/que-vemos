@@ -1,14 +1,7 @@
 import { useEffect, useState } from 'react';
-import { catalogo } from '../datos/catalogo';
-import type { Ficha, Titulo } from '../tipos';
+import { cargarCatalogo, type DatosCatalogo } from '../datos/catalogo';
 
-export interface DatosCatalogo {
-  pelis: Titulo[];
-  series: Titulo[];
-  conocidos: Ficha[];
-}
-
-export type Carga =
+type Carga =
   | { estado: 'cargando' }
   | { estado: 'listo'; datos: DatosCatalogo }
   | { estado: 'error'; mensaje: string };
@@ -20,8 +13,8 @@ export function useCatalogo(): { carga: Carga; reintentar: () => void } {
 
   useEffect(() => {
     let vigente = true;
-    Promise.all([catalogo.disponibles('peli'), catalogo.disponibles('serie'), catalogo.conocidos()])
-      .then(([pelis, series, conocidos]) => vigente && setCarga({ estado: 'listo', datos: { pelis, series, conocidos } }))
+    cargarCatalogo()
+      .then((datos) => vigente && setCarga({ estado: 'listo', datos }))
       .catch(
         (error: unknown) =>
           vigente &&

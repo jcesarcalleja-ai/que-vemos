@@ -1,17 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  clones,
-  estadoVacio,
-  gestear,
-  MARTES_21,
-  MIERCOLES_02,
-  peli,
-  SABADO_21,
-  SABADO_2330,
-  serie,
-  valorar,
-  vetar,
-} from './datos-prueba';
+import { apuntarGesto, fijarJamas, valorar } from '../estado';
+import { clones, estadoVacio, MARTES_21, MIERCOLES_02, peli, SABADO_21, SABADO_2330, serie } from './datos-prueba';
 import { proponer } from './proponer';
 import type { Estado, Genero, Titulo } from '../tipos';
 
@@ -53,8 +42,8 @@ describe('proponer: lo que nunca propone', () => {
     const miedo = peli('miedo', { nota: 9.9, generos: ['Terror', 'Suspense'] });
     const comedia = peli('comedia', { nota: 6, generos: ['Comedia'] });
 
-    expect(proponer([miedo, comedia], vetar(estadoVacio('pareja'), 'ella', 'Terror'), MARTES_21)).toBe(comedia);
-    expect(proponer([miedo, comedia], vetar(estadoVacio('solo'), 'ella', 'Terror'), MARTES_21)).toBe(miedo);
+    expect(proponer([miedo, comedia], fijarJamas(estadoVacio('pareja'), 'ella', ['Terror']), MARTES_21)).toBe(comedia);
+    expect(proponer([miedo, comedia], fijarJamas(estadoVacio('solo'), 'ella', ['Terror']), MARTES_21)).toBe(miedo);
   });
 
   it('devuelve null si no queda nada y no modifica el estado', () => {
@@ -108,18 +97,18 @@ describe('proponer: gustos aprendidos', () => {
 
   it('los gestos del Match orientan, pero pesan menos que una nota', () => {
     // Un gesto de "sí" no basta para remontar casi un punto de nota general...
-    const unGesto = gestear(estadoVacio(), 'yo', peli('g', { generos: ['Drama'] }), true);
+    const unGesto = apuntarGesto(estadoVacio(), 'yo', peli('g', { generos: ['Drama'] }), true);
     expect(sale(drama, comedia, unGesto, MARTES_21)).toBe('b');
 
     // ...pero varios "no" seguidos a un género sí lo apartan...
     let rechazos = estadoVacio();
-    for (const n of ['1', '2', '3', '4']) rechazos = gestear(rechazos, 'yo', peli(`c${n}`, { generos: ['Comedia'] }), false);
+    for (const n of ['1', '2', '3', '4']) rechazos = apuntarGesto(rechazos, 'yo', peli(`c${n}`, { generos: ['Comedia'] }), false);
     expect(sale(drama, comedia, rechazos, MARTES_21)).toBe('a');
 
     // ...y con la misma nota, una sola nota alta a un género pesa más que un solo gesto a favor del otro.
     const igualDrama = peli('igual-drama', { generos: ['Drama'], nota: 8 });
     const igualComedia = peli('igual-comedia', { generos: ['Comedia'], nota: 8 });
-    const notaContraGesto = gestear(
+    const notaContraGesto = apuntarGesto(
       valorar(estadoVacio(), 'yo', dramaVisto, 9),
       'yo',
       peli('gc', { generos: ['Comedia'] }),

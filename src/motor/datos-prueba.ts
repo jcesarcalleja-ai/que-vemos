@@ -1,6 +1,7 @@
 // Ayudas solo para los tests del motor.
 
-import type { Estado, Genero, Modo, Perfil, Titulo } from '../tipos';
+import { valorar } from '../estado';
+import type { Estado, Genero, Modo, Titulo } from '../tipos';
 
 /** Un martes a las 21:00 (entre semana). */
 export const MARTES_21 = new Date(2026, 10, 17, 21, 0);
@@ -42,31 +43,6 @@ export function serie(n: string, extra: Partial<Titulo> = {}): Titulo {
 export function estadoVacio(modo: Modo = 'solo'): Estado {
   const perfil = () => ({ valoraciones: {}, gestos: {}, jamas: [], inicioHecho: true });
   return { version: 1, tipo: 'peli', modo, perfiles: { yo: perfil(), ella: perfil() } };
-}
-
-/** Copia del estado con la nota (o 'abandonada') de ese perfil para ese título. */
-export function valorar(
-  estado: Estado,
-  perfil: Perfil,
-  t: Titulo,
-  nota: number | 'abandonada',
-): Estado {
-  const copia = structuredClone(estado);
-  copia.perfiles[perfil].valoraciones[t.id] = { tipo: t.tipo, titulo: t.titulo, generos: t.generos, nota };
-  return copia;
-}
-
-/** Copia del estado con un gesto del Match de ese perfil. */
-export function gestear(estado: Estado, perfil: Perfil, t: Titulo, si: boolean): Estado {
-  const copia = structuredClone(estado);
-  copia.perfiles[perfil].gestos[t.id] = { generos: t.generos, si };
-  return copia;
-}
-
-export function vetar(estado: Estado, perfil: Perfil, ...generos: Genero[]): Estado {
-  const copia = structuredClone(estado);
-  copia.perfiles[perfil].jamas = generos;
-  return copia;
 }
 
 /** `cantidad` pelis distintas, con nota creciente (1, 2, 3…) para que el orden sea claro. */

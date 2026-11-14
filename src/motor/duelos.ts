@@ -14,20 +14,11 @@ export interface Torneo {
   elecciones: string[];
 }
 
-export type Ronda = 'cuartos' | 'semis' | 'final' | 'terminado';
-
-export interface SituacionTorneo {
-  ronda: Ronda;
-  /** Posición del duelo actual dentro de su ronda (desde 0). */
-  duelo: number;
-  duelosEnRonda: number;
-  /** Los dos títulos que toca enfrentar ahora; null cuando ya hay ganadora. */
-  par: [Titulo, Titulo] | null;
-  /** La ganadora; null mientras el torneo siga. */
-  ganadora: Titulo | null;
-  /** Elecciones hechas, de 0 a 7. */
-  elegidas: number;
-}
+type SituacionTorneo =
+  /** Toca elegir entre los dos títulos del duelo. */
+  | { ronda: 'cuartos' | 'semis' | 'final'; par: [Titulo, Titulo]; ganadora: null }
+  /** Ya hay ganadora. */
+  | { ronda: 'terminado'; par: null; ganadora: Titulo };
 
 /** Cruce número `k` (0-3 cuartos, 4-5 semis, 6 final); solo vale si ya están decididos sus dos entrantes. */
 function cruce(t: Torneo, k: number): [Titulo, Titulo] {
@@ -48,13 +39,10 @@ export function crearTorneo(candidatos: Titulo[], estado: Estado, ahora: Date): 
 export function situacionTorneo(t: Torneo): SituacionTorneo {
   const elegidas = t.elecciones.length;
   if (elegidas >= ELECCIONES_TOTALES) {
-    const ganadora = t.cuadro.find((x) => x.id === t.elecciones[6])!;
-    return { ronda: 'terminado', duelo: 0, duelosEnRonda: 0, par: null, ganadora, elegidas };
+    return { ronda: 'terminado', par: null, ganadora: t.cuadro.find((x) => x.id === t.elecciones[6])! };
   }
   const par = cruce(t, elegidas);
-  if (elegidas < 4) return { ronda: 'cuartos', duelo: elegidas, duelosEnRonda: 4, par, ganadora: null, elegidas };
-  if (elegidas < 6) return { ronda: 'semis', duelo: elegidas - 4, duelosEnRonda: 2, par, ganadora: null, elegidas };
-  return { ronda: 'final', duelo: 0, duelosEnRonda: 1, par, ganadora: null, elegidas };
+  return { ronda: elegidas < 4 ? 'cuartos' : elegidas < 6 ? 'semis' : 'final', par, ganadora: null };
 }
 
 /** Anota la elección del duelo actual y devuelve el torneo nuevo. Si el id no es de uno de los dos, lo devuelve igual. */

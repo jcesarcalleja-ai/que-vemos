@@ -93,7 +93,7 @@ function Carta({ titulo, onSi, onNo, onYaLaVi }: Props) {
           </span>
           <Poster poster={titulo.poster} titulo={titulo.titulo} anio={titulo.anio} />
           <div className="deslizable__info">
-            <InfoTitulo titulo={titulo} nivel="h2" lineas={2} />
+            <InfoTitulo titulo={titulo} lineas={2} />
           </div>
         </div>
       </div>

@@ -20,13 +20,13 @@ export function pendientesDeInicio(conocidos: Ficha[], estado: Estado, perfil: P
 // --- Match ---
 
 /** Los 10 títulos y lo que ha deslizado cada uno. */
-export interface PartidaMatch {
+interface PartidaMatch {
   titulos: Titulo[];
   ella: Deslizados;
   yo: Deslizados;
 }
 
-export type TurnoMatch = Perfil | 'fin';
+type TurnoMatch = Perfil | 'fin';
 
 export function nuevaPartida(titulos: Titulo[]): PartidaMatch {
   return { titulos, ella: {}, yo: {} };

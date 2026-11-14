@@ -70,6 +70,6 @@ Solo para mí y mi novia, en un mismo móvil. Sin cuentas ni contraseñas. Todo 
 - `src/tipos.ts`: contrato de datos compartido.
 - `src/motor/`: reglas puras (puntuar, proponer, Duelos, Match). Sin React, sin almacenamiento, sin red.
 - `src/estado/`: guardar y leer en el navegador, exportar e importar.
-- `src/datos/`: de dónde salen los títulos (implementa `Catalogo`).
+- `src/datos/`: descarga y valida el `catalogo.json` con los títulos.
 - `src/ui/`: componentes visuales y estilos.
 - `src/App.tsx`: el flujo de pantallas.
