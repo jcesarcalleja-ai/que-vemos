@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  clones,
   estadoVacio,
   gestear,
   MARTES_21,
@@ -12,6 +13,17 @@ import {
   vetar,
 } from './datos-prueba';
 import { proponer } from './proponer';
+import type { Estado, Genero, Titulo } from '../tipos';
+
+/**
+ * Entre dos títulos casi igual de buenos puede salir uno u otro según la noche (es la variedad). Para ver qué
+ * prefiere el motor se enfrentan dos GRUPOS de 20 clones: da igual cuál de cada grupo salga, solo el mérito
+ * decide qué grupo sale.
+ */
+function sale(a: Titulo, b: Titulo, estado: Estado, ahora: Date): 'a' | 'b' {
+  const candidatos = [...clones('a', 20, a), ...clones('b', 20, b)];
+  return proponer(candidatos, estado, ahora)!.titulo.startsWith('a') ? 'a' : 'b';
+}
 
 describe('proponer: lo que nunca propone', () => {
   const buena = peli('buena', { nota: 9.5 });
@@ -56,90 +68,96 @@ describe('proponer: lo que nunca propone', () => {
 });
 
 describe('proponer: gustos aprendidos', () => {
-  // La comedia tiene un punto más de nota general; solo los gustos pueden darle la vuelta.
-  const drama = peli('drama', { generos: ['Drama'], nota: 7 });
-  const comedia = peli('comedia', { generos: ['Comedia'], nota: 8 });
+  // La comedia tiene casi un punto más de nota general; solo los gustos pueden darle la vuelta.
+  const drama = peli('drama', { generos: ['Drama'], nota: 7.6 });
+  const comedia = peli('comedia', { generos: ['Comedia'], nota: 8.4 });
   const dramaVisto = peli('drama-visto', { generos: ['Drama'] });
   const comediaVista = peli('comedia-vista', { generos: ['Comedia'] });
 
   it('con los perfiles vacíos propone algo razonable: el de mejor nota', () => {
-    expect(proponer([drama, comedia], estadoVacio(), MARTES_21)).toBe(comedia);
+    expect(sale(drama, comedia, estadoVacio(), MARTES_21)).toBe('b');
   });
 
   it('una nota de 7 o más hace que gusten los títulos de ese género', () => {
     const e = valorar(estadoVacio(), 'yo', dramaVisto, 7);
-    expect(proponer([drama, comedia], e, MARTES_21)).toBe(drama);
+    expect(sale(drama, comedia, e, MARTES_21)).toBe('a');
   });
 
   it('una nota de 4 o menos, o abandonar, hace evitar ese género', () => {
     const baja = valorar(estadoVacio(), 'yo', comediaVista, 4);
-    expect(proponer([drama, comedia], baja, MARTES_21)).toBe(drama);
+    expect(sale(drama, comedia, baja, MARTES_21)).toBe('a');
 
-    const seriesComedia = serie('c', { generos: ['Comedia'], nota: 8 });
-    const seriesDrama = serie('d', { generos: ['Drama'], nota: 7 });
+    const seriesComedia = serie('c', { generos: ['Comedia'], nota: 8.4 });
+    const seriesDrama = serie('d', { generos: ['Drama'], nota: 7.6 });
     const abandonada = valorar(estadoVacio(), 'yo', serie('c-vista', { generos: ['Comedia'] }), 'abandonada');
-    expect(proponer([seriesComedia, seriesDrama], abandonada, MARTES_21)).toBe(seriesDrama);
+    expect(sale(seriesComedia, seriesDrama, abandonada, MARTES_21)).toBe('b');
   });
 
   it('las notas 5 y 6 no enseñan nada', () => {
-    expect(proponer([drama, comedia], valorar(estadoVacio(), 'yo', dramaVisto, 6), MARTES_21)).toBe(comedia);
-    expect(proponer([drama, comedia], valorar(estadoVacio(), 'yo', dramaVisto, 5), MARTES_21)).toBe(comedia);
+    expect(sale(drama, comedia, valorar(estadoVacio(), 'yo', dramaVisto, 6), MARTES_21)).toBe('b');
+    expect(sale(drama, comedia, valorar(estadoVacio(), 'yo', dramaVisto, 5), MARTES_21)).toBe('b');
   });
 
   it('en pareja cuentan los gustos de los dos; en solo, solo los míos', () => {
     const ellaAmaDrama = valorar(estadoVacio('pareja'), 'ella', dramaVisto, 9);
-    expect(proponer([drama, comedia], ellaAmaDrama, MARTES_21)).toBe(drama);
+    expect(sale(drama, comedia, ellaAmaDrama, MARTES_21)).toBe('a');
 
     const soloIgnoraAElla = valorar(estadoVacio('solo'), 'ella', dramaVisto, 9);
-    expect(proponer([drama, comedia], soloIgnoraAElla, MARTES_21)).toBe(comedia);
+    expect(sale(drama, comedia, soloIgnoraAElla, MARTES_21)).toBe('b');
   });
 
   it('los gestos del Match orientan, pero pesan menos que una nota', () => {
-    // Un gesto de "sí" no basta para remontar un punto de nota general...
+    // Un gesto de "sí" no basta para remontar casi un punto de nota general...
     const unGesto = gestear(estadoVacio(), 'yo', peli('g', { generos: ['Drama'] }), true);
-    expect(proponer([drama, comedia], unGesto, MARTES_21)).toBe(comedia);
+    expect(sale(drama, comedia, unGesto, MARTES_21)).toBe('b');
 
     // ...pero varios "no" seguidos a un género sí lo apartan...
     let rechazos = estadoVacio();
     for (const n of ['1', '2', '3', '4']) rechazos = gestear(rechazos, 'yo', peli(`c${n}`, { generos: ['Comedia'] }), false);
-    expect(proponer([drama, comedia], rechazos, MARTES_21)).toBe(drama);
+    expect(sale(drama, comedia, rechazos, MARTES_21)).toBe('a');
 
-    // ...y una sola nota alta pesa más que un solo gesto a favor del otro género.
-    const nota = valorar(estadoVacio(), 'yo', dramaVisto, 9);
-    const notaContraGesto = gestear(nota, 'yo', peli('gc', { generos: ['Comedia'] }), true);
-    expect(proponer([drama, comedia], notaContraGesto, MARTES_21)).toBe(drama);
+    // ...y con la misma nota, una sola nota alta a un género pesa más que un solo gesto a favor del otro.
+    const igualDrama = peli('igual-drama', { generos: ['Drama'], nota: 8 });
+    const igualComedia = peli('igual-comedia', { generos: ['Comedia'], nota: 8 });
+    const notaContraGesto = gestear(
+      valorar(estadoVacio(), 'yo', dramaVisto, 9),
+      'yo',
+      peli('gc', { generos: ['Comedia'] }),
+      true,
+    );
+    expect(sale(igualDrama, igualComedia, notaContraGesto, MARTES_21)).toBe('a');
   });
 });
 
 describe('proponer: duración según día y hora', () => {
-  // La larga tiene mucha mejor nota; solo la preferencia de duración puede darle la vuelta.
-  const corta = peli('corta', { nota: 6.5, duracionMin: 95 });
+  // La larga tiene mejor nota; solo la preferencia de duración puede darle la vuelta.
+  const corta = peli('corta', { nota: 7.9, duracionMin: 95 });
   const larga = peli('larga', { nota: 8.5, duracionMin: 150 });
 
   it('un martes a las 21:00 prefiere la corta', () => {
-    expect(proponer([larga, corta], estadoVacio(), MARTES_21)).toBe(corta);
+    expect(sale(larga, corta, estadoVacio(), MARTES_21)).toBe('b');
   });
 
   it('un sábado a las 23:30 prefiere la corta', () => {
-    expect(proponer([larga, corta], estadoVacio(), SABADO_2330)).toBe(corta);
+    expect(sale(larga, corta, estadoVacio(), SABADO_2330)).toBe('b');
   });
 
   it('un sábado a las 21:00 le da igual la duración: gana la de mejor nota', () => {
-    expect(proponer([larga, corta], estadoVacio(), SABADO_21)).toBe(larga);
+    expect(sale(larga, corta, estadoVacio(), SABADO_21)).toBe('a');
   });
 
   it('105 minutos justos ya no cuentan como corta', () => {
-    const justa = peli('justa', { nota: 6.5, duracionMin: 105 });
-    expect(proponer([larga, justa], estadoVacio(), MARTES_21)).toBe(larga);
+    const justa = peli('justa', { nota: 7.9, duracionMin: 105 });
+    expect(sale(larga, justa, estadoVacio(), MARTES_21)).toBe('a');
   });
 
   it('también con series: 1 temporada o menos de 10 episodios cuentan como cortas', () => {
-    const miniserie = serie('mini', { nota: 6.5, temporadas: 1, episodios: 12 });
-    const cortaPorEpisodios = serie('ep', { nota: 6.5, temporadas: 3, episodios: 9 });
+    const miniserie = serie('mini', { nota: 7.9, temporadas: 1, episodios: 12 });
+    const cortaPorEpisodios = serie('ep', { nota: 7.9, temporadas: 3, episodios: 9 });
     const fleje = serie('fleje', { nota: 8.5, temporadas: 5, episodios: 60 });
-    expect(proponer([fleje, miniserie], estadoVacio(), MARTES_21)).toBe(miniserie);
-    expect(proponer([fleje, cortaPorEpisodios], estadoVacio(), MARTES_21)).toBe(cortaPorEpisodios);
-    expect(proponer([fleje, miniserie], estadoVacio(), SABADO_21)).toBe(fleje);
+    expect(sale(fleje, miniserie, estadoVacio(), MARTES_21)).toBe('b');
+    expect(sale(fleje, cortaPorEpisodios, estadoVacio(), MARTES_21)).toBe('b');
+    expect(sale(fleje, miniserie, estadoVacio(), SABADO_21)).toBe('a');
   });
 
   it('es una preferencia, no un filtro: una larga muy superior sigue ganando', () => {
@@ -147,6 +165,34 @@ describe('proponer: duración según día y hora', () => {
     const granLarga = peli('gran-larga', { nota: 9.5, duracionMin: 170 });
     expect(proponer([malaCorta, granLarga], estadoVacio(), MARTES_21)).toBe(granLarga);
     expect(proponer([granLarga], estadoVacio(), MARTES_21)).toBe(granLarga);
+  });
+
+  it('empuja, pero no premia lo mediocre: una corta de 7,2 pierde frente a una larga de 8,6', () => {
+    const mediocreCorta = peli('mediocre-corta', { nota: 7.2, duracionMin: 85 });
+    const buenaLarga = peli('buena-larga', { nota: 8.6, duracionMin: 160 });
+    expect(sale(buenaLarga, mediocreCorta, estadoVacio(), MARTES_21)).toBe('a');
+  });
+});
+
+describe('proponer: un título de un solo género no gana por serlo', () => {
+  // Le gusta más el drama que el crimen (el drama aparece en las tres notas), pero los dos le gustan.
+  const visto = (n: string, generos: Genero[]) => peli(n, { generos });
+  const gustaDramaYCrimen = [
+    visto('v1', ['Drama', 'Crimen']),
+    visto('v2', ['Drama', 'Crimen']),
+    visto('v3', ['Drama']),
+  ].reduce((e, t) => valorar(e, 'yo', t, 9), estadoVacio());
+  const soloDrama = peli('solo', { generos: ['Drama'], nota: 8 });
+  const dramaYCrimen = peli('doble', { generos: ['Drama', 'Crimen'], nota: 8 });
+
+  it('con la misma nota, uno de Drama/Crimen gana a uno solo de Drama si le gustan los dos géneros', () => {
+    expect(sale(soloDrama, dramaYCrimen, gustaDramaYCrimen, MARTES_21)).toBe('b');
+  });
+
+  it('pero uno de un género que le gusta no se hunde por mezclar otro que no le dice nada', () => {
+    const mezclaConNada = peli('mezcla', { generos: ['Drama', 'Western'], nota: 8 });
+    const sinGusto = peli('sin-gusto', { generos: ['Western'], nota: 8 });
+    expect(sale(mezclaConNada, sinGusto, gustaDramaYCrimen, MARTES_21)).toBe('a');
   });
 });
 

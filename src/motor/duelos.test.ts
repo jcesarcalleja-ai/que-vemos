@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { estadoVacio, MARTES_21, peli, pelisConNotaCreciente, valorar, vetar } from './datos-prueba';
+import { clones, estadoVacio, MARTES_21, peli, pelisConNotaCreciente, valorar, vetar } from './datos-prueba';
 import { crearTorneo, elegirEnDuelo, situacionTorneo, sustituirEnTorneo, type Torneo } from './duelos';
 
 /** Juega el torneo entero eligiendo siempre con `regla`; devuelve cada situación vista y el torneo final. */
@@ -34,7 +34,8 @@ describe('Duelos: elección de los 8', () => {
 
   it('usa mis gustos: un género que evito queda fuera aunque tenga nota', () => {
     const terror = Array.from({ length: 4 }, (_, i) => peli(`t${i}`, { generos: ['Terror'], nota: 8 }));
-    const resto = pelisConNotaCreciente(8).map((p) => ({ ...p, nota: 7 }));
+    // Los Duelos se turnan entre unos cuantos de los mejores: hacen falta bastantes alternativas igual de buenas.
+    const resto = clones('r', 20, peli('x', { nota: 8 }));
     let e = estadoVacio();
     for (let i = 0; i < 4; i++) e = valorar(e, 'yo', peli(`malo${i}`, { generos: ['Terror'] }), 2);
     const ids = crearTorneo([...terror, ...resto], e, MARTES_21)!.cuadro.map((x) => x.id);
