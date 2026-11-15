@@ -331,6 +331,29 @@ button {
   overflow: hidden;
 }
 
+.sinopsis--abierta {
+  display: block;
+}
+
+.sinopsis__boton {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sinopsis__mas {
+  display: inline-block;
+  margin-top: 0.2rem;
+  color: var(--acento);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
 .generos {
   display: flex;
   flex-wrap: wrap;

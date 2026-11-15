@@ -1,6 +1,7 @@
 // El flujo de pantallas de ¿Qué vemos? (ver ESPECIFICACION.md). Sin rutas: la pantalla es un estado.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useActualizacionLista } from './actualizacion';
 import { useEstado } from './estado';
 import { titulosDeHoy } from './motor';
 import { perfilPendienteDeInicio } from './pantallas/flujo';
@@ -21,6 +22,13 @@ export function App() {
   /** La propuesta que no convenció al pulsar «Elegir yo»: no entra en Duelos ni en el Match. */
   const [rechazada, setRechazada] = useState<string | null>(null);
   const volver = () => setVista('propuesta');
+
+  // Versión nueva lista: se estrena en la propuesta, donde recargar no corta nada (todo está guardado).
+  const actualizacionLista = useActualizacionLista();
+  const enPropuesta = vista === 'propuesta' && carga.estado === 'listo' && !perfilPendienteDeInicio(estado);
+  useEffect(() => {
+    if (actualizacionLista && enPropuesta) location.reload();
+  }, [actualizacionLista, enPropuesta]);
 
   let contenido;
   if (carga.estado === 'cargando') {

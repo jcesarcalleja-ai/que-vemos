@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import type { Ficha, Titulo } from '../tipos';
 import { NOMBRE_PLATAFORMA, duracion, esTitulo, formatearNota } from './formato';
 
@@ -37,11 +37,7 @@ export function InfoTitulo({ titulo, lineas = 3 }: Props) {
     <div>
       <h2 className="titulo__nombre">{titulo.titulo}</h2>
       <MetaTitulo titulo={titulo} />
-      {completo && (
-        <p className="sinopsis" style={{ '--lineas': lineas } as CSSProperties}>
-          {completo.sinopsis}
-        </p>
-      )}
+      {completo && <Sinopsis key={completo.id} texto={completo.sinopsis} lineas={lineas} />}
       {!completo && titulo.generos.length > 0 && (
         <ul className="generos" aria-label="Géneros">
           {titulo.generos.map((g) => (
@@ -52,5 +48,34 @@ export function InfoTitulo({ titulo, lineas = 3 }: Props) {
         </ul>
       )}
     </div>
+  );
+}
+
+/** Recortada a `lineas`; si no cabe, un toque la abre entera (y otro la vuelve a recoger). */
+function Sinopsis({ texto, lineas }: { texto: string; lineas: number }) {
+  const parrafo = useRef<HTMLParagraphElement>(null);
+  const [abierta, setAbierta] = useState(false);
+  const [recortada, setRecortada] = useState(false);
+
+  useLayoutEffect(() => {
+    const p = parrafo.current;
+    if (p && !abierta) setRecortada(p.scrollHeight > p.clientHeight + 1);
+  }, [texto, abierta]);
+
+  const parte = (
+    <p
+      ref={parrafo}
+      className={`sinopsis${abierta ? ' sinopsis--abierta' : ''}`}
+      style={{ '--lineas': lineas } as CSSProperties}
+    >
+      {texto}
+    </p>
+  );
+  if (!recortada && !abierta) return parte;
+  return (
+    <button type="button" className="sinopsis__boton" aria-expanded={abierta} onClick={() => setAbierta((a) => !a)}>
+      {parte}
+      <span className="sinopsis__mas">{abierta ? 'Ver menos' : 'Ver más'}</span>
+    </button>
   );
 }

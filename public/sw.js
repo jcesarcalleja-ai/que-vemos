@@ -1,6 +1,7 @@
 // Service worker de ¿Qué vemos?: guarda la app entera al instalarse para que abra sin conexión.
 // vite.config.ts rellena VERSION y ARCHIVOS (los textos entre comillas) al construir: cada versión nueva de la app
-// cambia este archivo, el navegador lo detecta, instala la nueva caché y borra la vieja.
+// cambia este archivo, el navegador lo detecta e instala la nueva caché. La anterior se guarda una versión más:
+// una página que arrancó con la versión vieja aún puede pedir sus archivos mientras se estrena la nueva.
 // Todo son rutas relativas a este archivo, así que vale bajo cualquier subruta (/que-vemos/).
 
 const VERSION = '__VERSION__';
@@ -42,13 +43,20 @@ self.addEventListener('activate', (evento) => {
       .keys()
       .then((claves) =>
         Promise.all(
+          // keys() va en orden de creación: se quedan esta versión y la anterior.
           claves
             .filter((c) => c.startsWith('que-vemos-') && c !== CACHE && c !== CACHE_CATALOGO)
+            .slice(0, -1)
             .map((c) => caches.delete(c)),
         ),
       )
       .then(() => self.clients.claim()),
   );
+});
+
+// La página pregunta qué archivos son de esta versión: si su propio script no está, es que va con una vieja.
+self.addEventListener('message', (evento) => {
+  if (evento.data === 'archivos') evento.source?.postMessage({ archivos: ARCHIVOS });
 });
 
 self.addEventListener('fetch', (evento) => {
@@ -70,7 +78,9 @@ self.addEventListener('fetch', (evento) => {
 
   evento.respondWith(
     caches.open(CACHE).then(async (cache) => {
-      const guardada = await cache.match(peticion, { ignoreSearch: true });
+      const guardada =
+        (await cache.match(peticion, { ignoreSearch: true, ignoreVary: true })) ??
+        (await caches.match(peticion, { ignoreSearch: true, ignoreVary: true }));
       if (guardada) return guardada;
       try {
         return await fetch(peticion);
