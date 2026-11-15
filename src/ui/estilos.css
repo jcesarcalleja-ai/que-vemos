@@ -366,7 +366,7 @@ button {
 
 .carta__poster .poster {
   /* El póster crece con la pantalla, pero siempre deja sitio a los botones. */
-  width: min(100%, max(9rem, calc((100dvh - 24rem) * 2 / 3)));
+  width: min(100%, max(9rem, calc((100dvh - 28rem) * 2 / 3)));
 }
 
 .acciones {

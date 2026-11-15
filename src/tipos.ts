@@ -60,14 +60,27 @@ export interface Titulo extends Ficha {
   episodios?: number;
 }
 
-/** Lo que alguien opina de un título que ya vio. */
-export interface Valoracion {
+interface DatosValoracion {
   tipo: Tipo;
   titulo: string;
   generos: Genero[];
+}
+
+/** Lo que alguien opina de un título que ya vio. */
+interface Vista extends DatosValoracion {
   /** Nota del 1 al 10, o 'abandonada' (solo series). */
   nota: number | 'abandonada';
 }
+
+/** «No me apetece»: un título descartado sin verlo. Enseña menos que una mala nota. */
+interface Descarte extends DatosValoracion {
+  nota: 'no-apetece';
+  anio: number;
+  /** La noche en que se descartó (`numeroDeNoche`), para contar cuántos van esa noche. */
+  noche: number;
+}
+
+export type Valoracion = Vista | Descarte;
 
 /** Un desliz del Match: señal más débil que una nota. */
 export interface Gesto {

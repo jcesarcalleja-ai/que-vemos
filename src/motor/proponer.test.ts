@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { apuntarGesto, fijarJamas, valorar } from '../estado';
+import { apuntarGesto, descartar, fijarJamas, valorar } from '../estado';
 import { clones, estadoVacio, MARTES_21, MIERCOLES_02, peli, SABADO_21, SABADO_2330, serie } from './datos-prueba';
 import { proponer } from './proponer';
 import type { Estado, Genero, Titulo } from '../tipos';
@@ -115,6 +115,82 @@ describe('proponer: gustos aprendidos', () => {
       true,
     );
     expect(sale(igualDrama, igualComedia, notaContraGesto, MARTES_21)).toBe('a');
+  });
+});
+
+describe('proponer: «No me apetece»', () => {
+  const drama = peli('drama', { generos: ['Drama'], nota: 7.6 });
+  const comedia = peli('comedia', { generos: ['Comedia'], nota: 8.4 });
+  const descartes = (cuantos: number, extra: Partial<Titulo>) =>
+    Array.from({ length: cuantos }, (_, i) => peli(`descarte-${i}`, extra)).reduce(
+      (e, t) => descartar(e, 'yo', t, 1),
+      estadoVacio(),
+    );
+
+  it('lo descartado no se vuelve a proponer', () => {
+    const buena = peli('buena', { nota: 9.5 });
+    const normal = peli('normal', { nota: 5 });
+    expect(proponer([buena, normal], descartar(estadoVacio(), 'yo', buena, 1), MARTES_21)).toBe(normal);
+  });
+
+  it('enseña a evitar ese género, pero menos que una mala nota: uno solo no basta, dos sí', () => {
+    expect(sale(drama, comedia, descartes(1, { generos: ['Comedia'] }), MARTES_21)).toBe('b');
+    expect(sale(drama, comedia, descartes(2, { generos: ['Comedia'] }), MARTES_21)).toBe('a');
+  });
+
+  it('descartar títulos antiguos hace que lo antiguo salga aún menos; descartar actuales, no', () => {
+    const deLos90 = peli('90', { anio: 1998, nota: 9 });
+    const actual = peli('actual', { nota: 7.9 });
+    expect(sale(deLos90, actual, estadoVacio(), SABADO_21)).toBe('a');
+    expect(sale(deLos90, actual, descartes(4, { anio: 1985, generos: ['Western'] }), SABADO_21)).toBe('b');
+    expect(sale(deLos90, actual, descartes(4, { anio: 2015, generos: ['Western'] }), SABADO_21)).toBe('a');
+  });
+});
+
+describe('proponer: lo antiguo y la animación', () => {
+  it('no propone nada anterior a 1980, por buena que sea', () => {
+    const clasica = peli('clasica', { anio: 1979, nota: 9.9 });
+    const normal = peli('normal', { nota: 5 });
+    expect(proponer([clasica, normal], estadoVacio(), SABADO_21)).toBe(normal);
+    expect(proponer([clasica], estadoVacio(), SABADO_21)).toBeNull();
+    expect(proponer([peli('justa', { anio: 1980 })], estadoVacio(), SABADO_21)).not.toBeNull();
+  });
+
+  it('con la misma nota, lo actual gana a lo de los 90, y lo de los 90 a lo de los 80', () => {
+    const de = (anio: number) => peli(String(anio), { anio, nota: 8.5 });
+    expect(sale(de(2000), de(1995), estadoVacio(), SABADO_21)).toBe('a');
+    expect(sale(de(1995), de(1985), estadoVacio(), SABADO_21)).toBe('a');
+  });
+
+  it('es una preferencia, no un filtro: una de los 90 bastante mejor sigue ganando a una actual', () => {
+    expect(sale(peli('90', { anio: 1998, nota: 9 }), peli('actual', { nota: 7.8 }), estadoVacio(), SABADO_21)).toBe('a');
+  });
+
+  describe('animación', () => {
+    const animada = peli('animada', { generos: ['Animación'], nota: 9 });
+    const drama = peli('drama', { generos: ['Drama'], nota: 7.6 });
+    const buenDrama = peli('buen-drama', { generos: ['Drama'], nota: 8.5 });
+    const leGustan = (cuantas: number) =>
+      Array.from({ length: cuantas }, (_, i) => peli(`animada-vista-${i}`, { generos: ['Animación'] })).reduce(
+        (e, t) => valorar(e, 'yo', t, 9),
+        estadoVacio(),
+      );
+
+    it('por defecto queda muy abajo: pierde ante algo mucho peor valorado', () => {
+      expect(sale(animada, drama, estadoVacio(), SABADO_21)).toBe('b');
+    });
+
+    it('pero no está prohibida: si no hay otra cosa, sale', () => {
+      expect(proponer([animada], estadoVacio(), SABADO_21)).toBe(animada);
+    });
+
+    it('con las buenas notas de un swipe inicial (cuatro clásicos animados) sigue por debajo de un buen drama', () => {
+      expect(sale(animada, buenDrama, leGustan(4), SABADO_21)).toBe('b');
+    });
+
+    it('vuelve cuando se le ponen buenas notas a muchos títulos animados', () => {
+      expect(sale(animada, buenDrama, leGustan(8), SABADO_21)).toBe('a');
+    });
   });
 });
 

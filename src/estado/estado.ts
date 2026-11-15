@@ -1,6 +1,6 @@
 // Estado de la app y operaciones puras sobre él: cada una devuelve un Estado nuevo y no toca el anterior.
 
-import type { DatosPerfil, Estado, Ficha, Genero, Modo, Perfil, Tipo } from '../tipos';
+import type { DatosPerfil, Estado, Ficha, Genero, Modo, Perfil, Tipo, Valoracion } from '../tipos';
 
 function perfilVacio(): DatosPerfil {
   return { valoraciones: {}, gestos: {}, jamas: [], inicioHecho: false };
@@ -43,11 +43,18 @@ export function valorar(
     throw new RangeError(`Nota fuera de 1–10: ${nota}`);
   }
   const { tipo, titulo, generos } = ficha;
+  return conValoracion(estado, perfil, ficha.id, { tipo, titulo, generos: [...generos], nota });
+}
+
+/** «No me apetece»: `perfil` descarta `ficha` sin verla, la noche número `noche`. No se le vuelve a proponer. */
+export function descartar(estado: Estado, perfil: Perfil, ficha: Ficha, noche: number): Estado {
+  const { tipo, titulo, generos, anio } = ficha;
+  return conValoracion(estado, perfil, ficha.id, { tipo, titulo, generos: [...generos], nota: 'no-apetece', anio, noche });
+}
+
+function conValoracion(estado: Estado, perfil: Perfil, id: string, valoracion: Valoracion): Estado {
   return conPerfil(estado, perfil, {
-    valoraciones: {
-      ...estado.perfiles[perfil].valoraciones,
-      [ficha.id]: { tipo, titulo, generos: [...generos], nota },
-    },
+    valoraciones: { ...estado.perfiles[perfil].valoraciones, [id]: valoracion },
   });
 }
 

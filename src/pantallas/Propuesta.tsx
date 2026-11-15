@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react';
-import { cambiarModo, cambiarTipo, useEstado, valorar } from '../estado';
-import { proponer } from '../motor';
+import { cambiarModo, cambiarTipo, descartar, useEstado, valorar } from '../estado';
+import { numeroDeNoche, proponer } from '../motor';
 import type { Titulo } from '../tipos';
 import { Boton, CartaTitulo, Interruptores, Mensaje, Pantalla } from '../ui';
 import { useArriba } from './Barra';
+import { descartesDeLaNoche, TOPE_NO_APETECE } from './flujo';
 import { HojaYaLaVi } from './HojaYaLaVi';
 
 interface Props {
   /** Los títulos disponibles del tipo elegido. */
   titulos: Titulo[];
-  /** «Elegir yo»: recibe la propuesta que no ha convencido. */
+  /** «Elegir yo», o el último «No me apetece» que cabe en una noche: recibe la propuesta que no ha convencido. */
   onElegir: (propuesta: Titulo) => void;
   onAjustes: () => void;
 }
@@ -20,6 +21,13 @@ export function Propuesta({ titulos, onElegir, onAjustes }: Props) {
   const propuesta = useMemo(() => proponer(titulos, estado, new Date()), [titulos, estado]);
   const [puntuando, setPuntuando] = useState(false);
   useArriba(propuesta?.id);
+
+  /** «No me apetece»: ese título no vuelve y sale otro; al llegar al tope de la noche, toca elegir. */
+  function noApetece(titulo: Titulo) {
+    const ahora = new Date();
+    cambiar((e) => descartar(e, 'yo', titulo, numeroDeNoche(ahora)));
+    if (descartesDeLaNoche(estado, ahora) + 1 >= TOPE_NO_APETECE) onElegir(titulo);
+  }
 
   return (
     <Pantalla
@@ -38,7 +46,12 @@ export function Propuesta({ titulos, onElegir, onAjustes }: Props) {
       }
     >
       {propuesta ? (
-        <CartaTitulo titulo={propuesta} onYaLaVi={() => setPuntuando(true)} onElegir={() => onElegir(propuesta)} />
+        <CartaTitulo
+          titulo={propuesta}
+          onYaLaVi={() => setPuntuando(true)}
+          onNoApetece={() => noApetece(propuesta)}
+          onElegir={() => onElegir(propuesta)}
+        />
       ) : (
         <Mensaje titulo="No queda nada por proponer" texto="Ya has visto todo lo que hay disponible ahora mismo." />
       )}

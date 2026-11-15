@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Ficha } from '../tipos';
 import {
   apuntarGesto,
+  descartar,
   estadoInicial,
   fijarJamas,
   marcarInicioHecho,
@@ -59,6 +60,19 @@ describe('operaciones', () => {
 
   it.each([0, 11, 5.5, NaN])('valorar rechaza la nota %s y no cambia nada', (nota) => {
     expect(() => valorar(estadoInicial(), 'yo', ficha, nota)).toThrow(RangeError);
+  });
+
+  it('descartar apunta un «No me apetece» con el año del título y la noche, solo en el perfil indicado', () => {
+    const e = descartar(estadoInicial(), 'yo', ficha, 20500);
+    expect(e.perfiles.yo.valoraciones['peli-1']).toEqual({
+      tipo: 'peli',
+      titulo: 'Alien',
+      generos: ['Terror', 'Ciencia ficción'],
+      nota: 'no-apetece',
+      anio: 1979,
+      noche: 20500,
+    });
+    expect(e.perfiles.ella.valoraciones).toEqual({});
   });
 
   it('apuntarGesto guarda el sí/no del perfil y lo puede cambiar', () => {

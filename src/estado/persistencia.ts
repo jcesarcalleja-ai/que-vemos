@@ -97,6 +97,10 @@ function esObjeto(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
+function esEntero(v: unknown): v is number {
+  return typeof v === 'number' && Number.isInteger(v);
+}
+
 function elegir<T extends string>(v: unknown, validos: readonly T[], que: string): T {
   if (!validos.includes(v as T)) invalido(`${que} no es válido`);
   return v as T;
@@ -113,14 +117,19 @@ function leerValoracion(v: unknown, perfil: Perfil): Valoracion {
   if (!esObjeto(v) || typeof v.titulo !== 'string') invalido(`una nota de «${perfil}» está incompleta`);
   const titulo = v.titulo;
   const nota = v.nota;
-  const notaValida = nota === 'abandonada' || (typeof nota === 'number' && Number.isInteger(nota) && nota >= 1 && nota <= 10);
-  if (!notaValida) invalido(`la nota de «${titulo}» (${perfil}) tiene que ser un número del 1 al 10 o «abandonada»`);
-  return {
+  const descarte = nota === 'no-apetece';
+  if (!descarte && nota !== 'abandonada' && !(esEntero(nota) && nota >= 1 && nota <= 10)) {
+    invalido(`la nota de «${titulo}» (${perfil}) tiene que ser un número del 1 al 10 o «abandonada»`);
+  }
+  const datos = {
     tipo: elegir<Tipo>(v.tipo, ['peli', 'serie'], `el tipo de «${titulo}»`),
     titulo,
     generos: leerGeneros(v.generos, `«${titulo}» (${perfil})`),
-    nota: nota as Valoracion['nota'],
   };
+  if (!descarte) return { ...datos, nota: nota as number | 'abandonada' };
+  const { anio, noche } = v;
+  if (!esEntero(anio) || !esEntero(noche)) invalido(`el «No me apetece» de «${titulo}» (${perfil}) está incompleto`);
+  return { ...datos, nota, anio, noche };
 }
 
 function leerGesto(v: unknown, perfil: Perfil): Gesto {

@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type { Estado, Ficha } from '../tipos';
-import { apuntarGesto, cambiarModo, cambiarTipo, estadoInicial, fijarJamas, marcarInicioHecho, valorar } from './estado';
+import {
+  apuntarGesto,
+  cambiarModo,
+  cambiarTipo,
+  descartar,
+  estadoInicial,
+  fijarJamas,
+  marcarInicioHecho,
+  valorar,
+} from './estado';
 import {
   CLAVE_ALMACEN,
   CLAVE_ILEGIBLE,
@@ -32,6 +41,7 @@ function estadoConDatos(): Estado {
   e = cambiarModo(e, 'pareja');
   e = valorar(e, 'yo', peli, 9);
   e = valorar(e, 'ella', serie, 'abandonada');
+  e = descartar(e, 'yo', serie, 20500);
   e = apuntarGesto(e, 'ella', peli, false);
   e = fijarJamas(e, 'ella', ['Terror', 'Bélica']);
   e = marcarInicioHecho(e, 'yo');
@@ -124,6 +134,8 @@ describe('exportar e importar', () => {
     ['género inventado en una nota', archivoCon((e) => (e.perfiles.yo.valoraciones['peli-1'].generos = ['Nada']))],
     ['gesto sin booleano', archivoCon((e) => (e.perfiles.ella.gestos['peli-1'].si = 'no'))],
     ['valoración sin título', archivoCon((e) => delete e.perfiles.yo.valoraciones['peli-1'].titulo)],
+    ['«No me apetece» sin la noche', archivoCon((e) => delete e.perfiles.yo.valoraciones['serie-2'].noche)],
+    ['«No me apetece» con un año que no es un número', archivoCon((e) => (e.perfiles.yo.valoraciones['serie-2'].anio = '2017'))],
   ])('importar rechaza: %s', (_nombre, texto) => {
     expect(() => importarEstado(texto)).toThrow(Error);
   });
@@ -152,7 +164,7 @@ describe('exportar e importar', () => {
   it('un archivo con la clave __proto__ no contamina nada', () => {
     const texto = archivoCon(() => {}).replace('"peli-1"', '"__proto__"');
     const e = importarEstado(texto);
-    expect(Object.keys(e.perfiles.yo.valoraciones)).toEqual(['__proto__']);
+    expect(Object.keys(e.perfiles.yo.valoraciones)).toEqual(['__proto__', 'serie-2']);
     expect(({} as { nota?: unknown }).nota).toBeUndefined();
   });
 });

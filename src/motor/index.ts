@@ -1,4 +1,5 @@
 export { proponer } from './proponer';
+export { numeroDeNoche } from './puntuar';
 export {
   crearTorneo,
   elegirEnDuelo,

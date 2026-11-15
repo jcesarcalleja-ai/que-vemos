@@ -3,15 +3,18 @@
 
 import type { Estado, Genero, Perfil, Titulo } from '../tipos';
 
-// Cada título tiene un MÉRITO (gustos + nota + lo corto); de los TURNO de más mérito, cada noche toca una ventana
-// distinta: ahí está la variedad. Para dar más o menos peso a cada cosa, toca estas constantes:
-// PESO_GUSTOS, PESO_GESTO, PESO_NOTA_ALTA, NOTA_MINIMA, NOTA_TOPE, CASTIGO_NOTA_BAJA, PESO_DURACION, TURNO y MARGEN_TURNO.
+// Cada título tiene un MÉRITO (gustos + nota + lo corto − lo antiguo − la animación); de los TURNO de más mérito,
+// cada noche toca una ventana distinta: ahí está la variedad. Para dar más o menos peso a cada cosa, toca estas
+// constantes: PESO_GUSTOS, PESO_GESTO, PESO_NO_APETECE, PESO_NOTA_ALTA, NOTA_MINIMA, NOTA_TOPE, CASTIGO_NOTA_BAJA,
+// PESO_DURACION, ANIO_MINIMO, ANIO_RECIENTE, CASTIGO_ANTIGUA, CASTIGO_ANIMACION, GUSTO_QUE_PERDONA, TURNO y MARGEN_TURNO.
 // Un punto de mérito equivale a un punto de nota general entre NOTA_MINIMA y NOTA_TOPE.
 
 /** Máximo de puntos que dan los gustos: afinidad de -1 (lo evitas) a 1 (lo que más te gusta) por este peso. */
 const PESO_GUSTOS = 3.5;
 /** Cuánto vale un gesto del Match frente a una nota (señal más débil). */
 const PESO_GESTO = 0.25;
+/** Cuánto vale un «No me apetece» frente a una mala nota: no la ha visto, así que enseña menos. */
+const PESO_NO_APETECE = 0.5;
 /** Por encima de NOTA_TOPE la nota casi no cuenta: un 9,3 no debe ganar siempre a un 8,6, o saldría cada noche. */
 const PESO_NOTA_ALTA = 0.3;
 const NOTA_MINIMA = 7.5;
@@ -23,6 +26,23 @@ const CASTIGO_NOTA_BAJA = 6;
  * todo con una nota de NOTA_TOPE o más, nada con NOTA_MINIMA o menos. Solo empuja a lo que ya es bueno.
  */
 const PESO_DURACION = 4.25;
+/** Lo anterior a este año no se propone nunca. */
+const ANIO_MINIMO = 1980;
+/** Desde este año un título no pierde nada por antiguo. */
+const ANIO_RECIENTE = 2000;
+/**
+ * Puntos que pierde un título de ANIO_MINIMO (en proporción, los que hay hasta ANIO_RECIENTE): uno de los 80 o los 90
+ * solo sale si es bastante mejor que lo actual. Cada «No me apetece» a uno antiguo sube el castigo, hasta el doble.
+ */
+const CASTIGO_ANTIGUA = 6;
+const DESCARTES_QUE_DOBLAN = 4;
+/** Puntos que pierde la animación (dibujos y anime): la deja fuera salvo que el gusto acumulado por ella la perdone. */
+const CASTIGO_ANIMACION = 8;
+/**
+ * Gusto acumulado por la animación con el que el castigo desaparece del todo (va bajando en proporción). Más que
+ * los cuatro clásicos animados del swipe inicial: haberlos visto de pequeño no es querer anime cada noche.
+ */
+const GUSTO_QUE_PERDONA = 8;
 /** Cuántos de los mejores se turnan (más = más variedad, menos calidad). */
 const TURNO = 15;
 /** Y solo entra al turno quien no esté a más de estos puntos del mejor: si no hay bastantes parecidos, se toman los mejores. */
@@ -36,6 +56,11 @@ const MS_DIA = 86_400_000;
 /** Perfiles cuyos datos cuentan: solo `yo` en solo; los dos en pareja. */
 function perfilesActivos(estado: Estado): Perfil[] {
   return estado.modo === 'pareja' ? ['yo', 'ella'] : ['yo'];
+}
+
+/** El número de la noche de `ahora`: el mismo de 06:00 a 06:00 y uno más cada día. */
+export function numeroDeNoche(ahora: Date): number {
+  return noche(ahora).numero;
 }
 
 /** Una "noche" va de 06:00 a 06:00: `numero` cuenta las noches (una más cada día) y `dia` es su día de la semana (0 = domingo). */
@@ -58,22 +83,29 @@ function esCorto(t: Titulo): boolean | null {
   return (t.temporadas ?? Infinity) <= 1 || (t.episodios ?? Infinity) < SERIE_CORTA_EPISODIOS;
 }
 
-/** Gusto acumulado por género: notas altas suman, bajas y abandonadas restan, los gestos pesan menos. */
-function gustosPorGenero(estado: Estado): Map<Genero, number> {
-  const gustos = new Map<Genero, number>();
+/**
+ * Lo aprendido de notas y gestos. `porGenero`: las notas altas suman, las bajas y abandonadas restan, y los
+ * «No me apetece» y los gestos pesan menos. `descartesAntiguos`: cuántos «No me apetece» fueron a títulos antiguos.
+ */
+function gustos(estado: Estado): { porGenero: Map<Genero, number>; descartesAntiguos: number } {
+  const porGenero = new Map<Genero, number>();
+  let descartesAntiguos = 0;
   const sumar = (generos: Genero[], delta: number) => {
-    for (const g of generos) gustos.set(g, (gustos.get(g) ?? 0) + delta);
+    for (const g of generos) porGenero.set(g, (porGenero.get(g) ?? 0) + delta);
   };
   for (const perfil of perfilesActivos(estado)) {
     const datos = estado.perfiles[perfil];
     for (const v of Object.values(datos.valoraciones)) {
-      if (v.nota === 'abandonada' || v.nota <= 4) sumar(v.generos, -1);
+      if (v.nota === 'no-apetece') {
+        sumar(v.generos, -PESO_NO_APETECE);
+        if (v.anio < ANIO_RECIENTE) descartesAntiguos++;
+      } else if (v.nota === 'abandonada' || v.nota <= 4) sumar(v.generos, -1);
       else if (v.nota >= 7) sumar(v.generos, 1);
       // 5 y 6 no enseñan nada.
     }
     for (const g of Object.values(datos.gestos)) sumar(g.generos, g.si ? PESO_GESTO : -PESO_GESTO);
   }
-  return gustos;
+  return { porGenero, descartesAntiguos };
 }
 
 /** Puntos de la nota general: lineales, más suaves por encima de NOTA_TOPE y con castigo por debajo de NOTA_MINIMA. */
@@ -84,18 +116,25 @@ function puntosNota(nota: number): number {
 
 /** Devuelve la función que puntúa el mérito de un título (más es mejor) para este estado y este momento. */
 function crearPuntuador(estado: Estado, ahora: Date): (t: Titulo) => number {
-  const gustos = gustosPorGenero(estado);
+  const { porGenero, descartesAntiguos } = gustos(estado);
   const corto = prefiereCorto(ahora);
+  const castigoPorAnio =
+    (CASTIGO_ANTIGUA * (1 + Math.min(descartesAntiguos, DESCARTES_QUE_DOBLAN) / DESCARTES_QUE_DOBLAN)) /
+    (ANIO_RECIENTE - ANIO_MINIMO);
+  const perdon = Math.min(1, Math.max(0, (porGenero.get('Animación') ?? 0) / GUSTO_QUE_PERDONA));
+  const castigoAnimacion = CASTIGO_ANIMACION * (1 - perdon);
 
   return (t) => {
     // Suma entre √n géneros, sin pasar de 1: un título de un solo género no gana a otro de dos igual de afines,
     // pero tampoco se hunde si solo uno de sus géneros te gusta.
     const afinidad = t.generos.length
-      ? t.generos.reduce((suma, g) => suma + Math.tanh((gustos.get(g) ?? 0) / 3), 0) / Math.sqrt(t.generos.length)
+      ? t.generos.reduce((suma, g) => suma + Math.tanh((porGenero.get(g) ?? 0) / 3), 0) / Math.sqrt(t.generos.length)
       : 0;
     const bueno = Math.min(1, Math.max(0, (t.nota - NOTA_MINIMA) / (NOTA_TOPE - NOTA_MINIMA)));
     const duracion = corto && esCorto(t) ? PESO_DURACION * bueno : 0;
-    return Math.max(-1, Math.min(1, afinidad)) * PESO_GUSTOS + puntosNota(t.nota) + duracion;
+    const antigua = Math.max(0, ANIO_RECIENTE - t.anio) * castigoPorAnio;
+    const animacion = t.generos.includes('Animación') ? castigoAnimacion : 0;
+    return Math.max(-1, Math.min(1, afinidad)) * PESO_GUSTOS + puntosNota(t.nota) + duracion - antigua - animacion;
   };
 }
 
@@ -112,7 +151,7 @@ export function ordenar(titulos: Titulo[], estado: Estado, ahora: Date): Titulo[
   return conPuntos(titulos, estado, ahora).map((x) => x.titulo);
 }
 
-/** Títulos que se pueden poner delante: sin valorar por quien toque y sin géneros "jamás" en pareja. */
+/** Títulos que se pueden poner delante: de ANIO_MINIMO en adelante, sin valorar ni descartar por quien toque y sin géneros "jamás" en pareja. */
 export function elegibles(
   candidatos: Titulo[],
   estado: Estado,
@@ -123,6 +162,7 @@ export function elegibles(
   return candidatos.filter(
     (t) =>
       !excluirIds.has(t.id) &&
+      t.anio >= ANIO_MINIMO &&
       !perfiles.some((p) => Object.hasOwn(estado.perfiles[p].valoraciones, t.id)) &&
       !t.generos.some((g) => jamas.has(g)),
   );

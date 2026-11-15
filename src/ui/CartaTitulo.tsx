@@ -7,12 +7,13 @@ import { Poster } from './Poster';
 interface Props {
   titulo: Titulo;
   onYaLaVi: () => void;
-  /** Si no se pasa, no aparece «Elegir yo» (p. ej. en la pantalla de la ganadora). */
+  /** Si no se pasan, no aparecen «No me apetece» ni «Elegir yo» (p. ej. en la pantalla de la ganadora). */
+  onNoApetece?: () => void;
   onElegir?: () => void;
 }
 
 /** La propuesta (y la ganadora): póster grande, datos y los botones de acción. */
-export function CartaTitulo({ titulo, onYaLaVi, onElegir }: Props) {
+export function CartaTitulo({ titulo, onYaLaVi, onNoApetece, onElegir }: Props) {
   return (
     <article className="carta">
       <div className="carta__poster">
@@ -26,8 +27,13 @@ export function CartaTitulo({ titulo, onYaLaVi, onElegir }: Props) {
         <div className="acciones">
           {titulo.trailer && <EnlaceBoton href={titulo.trailer}>Tráiler</EnlaceBoton>}
           <Boton onClick={onYaLaVi}>Ya la vi</Boton>
-          {onElegir && <Boton onClick={onElegir}>Elegir yo</Boton>}
         </div>
+        {(onNoApetece || onElegir) && (
+          <div className="acciones">
+            {onNoApetece && <Boton onClick={onNoApetece}>No me apetece</Boton>}
+            {onElegir && <Boton onClick={onElegir}>Elegir yo</Boton>}
+          </div>
+        )}
       </div>
     </article>
   );

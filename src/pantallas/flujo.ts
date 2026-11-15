@@ -1,7 +1,7 @@
 // Lógica del flujo de pantallas que no depende de React: quién tiene que hacer su swipe inicial,
 // qué toca deslizar en el Match y cómo se sustituye un título. Las pantallas solo la llaman.
 
-import { sustituirEnMatch, type Deslizados } from '../motor';
+import { numeroDeNoche, sustituirEnMatch, type Deslizados } from '../motor';
 import type { Estado, Ficha, Perfil, Titulo } from '../tipos';
 
 /** Quién tiene que hacer aún su swipe inicial (yo primero; ella solo en modo pareja), o null. */
@@ -15,6 +15,18 @@ export function perfilPendienteDeInicio(estado: Estado): Perfil | null {
 export function pendientesDeInicio(conocidos: Ficha[], estado: Estado, perfil: Perfil): Ficha[] {
   const hechos = estado.perfiles[perfil].valoraciones;
   return conocidos.filter((f) => !Object.hasOwn(hechos, f.id));
+}
+
+// --- «No me apetece» ---
+
+/** A la de tres «No me apetece» en una noche ya no sale otra propuesta: se pasa a Duelos o al Match. */
+export const TOPE_NO_APETECE = 3;
+
+/** Cuántos «No me apetece» lleva `yo` (quien descarta en la propuesta) la noche de `ahora`. */
+export function descartesDeLaNoche(estado: Estado, ahora: Date): number {
+  const noche = numeroDeNoche(ahora);
+  return Object.values(estado.perfiles.yo.valoraciones).filter((v) => v.nota === 'no-apetece' && v.noche === noche)
+    .length;
 }
 
 // --- Match ---

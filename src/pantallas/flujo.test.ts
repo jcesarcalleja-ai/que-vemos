@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { crearMatch, ganadoraMatch } from '../motor';
-import { estadoVacio, MARTES_21, peli, pelisConNotaCreciente } from '../motor/datos-prueba';
-import { apuntarGesto, estadoInicial, marcarInicioHecho, valorar } from '../estado';
+import { crearMatch, ganadoraMatch, numeroDeNoche } from '../motor';
+import { estadoVacio, MARTES_21, MIERCOLES_02, peli, pelisConNotaCreciente } from '../motor/datos-prueba';
+import { apuntarGesto, descartar, estadoInicial, marcarInicioHecho, valorar } from '../estado';
 import type { Ficha } from '../tipos';
 import {
+  descartesDeLaNoche,
   deslizar,
   nuevaPartida,
   pendientesDeInicio,
@@ -33,6 +34,21 @@ describe('pendientesDeInicio', () => {
     const e = valorar(estadoInicial(), 'yo', conocidos[1]!, 8);
     expect(pendientesDeInicio(conocidos, e, 'yo').map((f) => f.id)).toEqual(['peli-1', 'peli-3']);
     expect(pendientesDeInicio(conocidos, e, 'ella')).toHaveLength(3);
+  });
+});
+
+describe('descartesDeLaNoche', () => {
+  it('cuenta los «No me apetece» de yo de esta noche (06:00 a 06:00), no las notas ni los de otras noches', () => {
+    const anoche = numeroDeNoche(MARTES_21) - 1;
+    let e = descartar(estadoVacio(), 'yo', peli('1'), anoche);
+    e = valorar(e, 'yo', peli('2'), 3);
+    expect(descartesDeLaNoche(e, MARTES_21)).toBe(0);
+
+    e = descartar(e, 'yo', peli('3'), numeroDeNoche(MARTES_21));
+    e = descartar(e, 'yo', peli('4'), numeroDeNoche(MIERCOLES_02));
+    expect(descartesDeLaNoche(e, MARTES_21)).toBe(2);
+    expect(descartesDeLaNoche(e, MIERCOLES_02)).toBe(2);
+    expect(descartesDeLaNoche(e, new Date(2026, 10, 18, 21, 0))).toBe(0);
   });
 });
 

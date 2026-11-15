@@ -6,7 +6,7 @@ Web para móvil (PWA) que **decide por mí** qué peli o serie ver. Es la fuente
 
 Cada vez que entro en Netflix, Prime Video, Max o Movistar Plus+ me paso horas buscando y no encuentro nada. La app elige por mí.
 
-**Regla de oro:** nada de cuestionarios, filtros ni botón "Otra". Si la app hace contestar preguntas, vuelve a ser como estar buscando. Toda elección acaba siempre en pocos toques.
+**Regla de oro:** nada de cuestionarios, filtros ni botón "Otra" sin fin. Si la app hace contestar preguntas, vuelve a ser como estar buscando. Toda elección acaba siempre en pocos toques.
 
 ## Para quién
 
@@ -18,11 +18,12 @@ Solo para mí y mi novia, en un mismo móvil. Sin cuentas ni contraseñas. Todo 
    - Pelis: entre semana o a partir de las 23:00 tira hacia pelis de menos de 1h45 (105 min). Viernes y sábado le da igual.
    - Series: entre semana tira hacia miniseries o series cortas (1 temporada o menos de 10 episodios).
 2. Arriba solo hay dos interruptores, que recuerdan cómo se dejaron: **Pelis / Series** y **Solo / Con mi novia**.
-3. Botones de la propuesta: **Ver en [plataforma]**, **Tráiler**, **Ya la vi** y **Elegir yo**.
+3. Botones de la propuesta: **Ver en [plataforma]**, **Tráiler**, **Ya la vi**, **No me apetece** y **Elegir yo**.
+   - **No me apetece**: ese título no vuelve a salir nunca, la app aprende de él y enseña otra propuesta. No es un "Otra" sin fin: a la tercera vez en la misma noche (y a partir de ahí, cada vez) lleva directo a Duelos o al Match.
 4. **Elegir yo** (si la propuesta no convence):
    - **Solo → Duelos**: torneo de 8 títulos elegidos según mis notas, enfrentados de dos en dos ("¿esta o esta?"): cuartos, semis y final. 7 toques y siempre hay ganadora.
    - **Con mi novia → Match**: la app saca 10 títulos. Primero los desliza ella (sí/no) y luego yo los mismos, en el mismo móvil. Gana el mejor con sí de los dos. Si no coincidimos en ninguno, la app elige entre los que alguno marcó con sí.
-   - No existe botón "Otra": el título que gana es el que se ve.
+   - En Duelos y en el Match no hay "No me apetece" ni "Otra": el título que gana es el que se ve.
 5. **Ya la vi** está en cualquier carta (propuesta, Duelos y Match): pide nota del 1 al 10 y en su lugar aparece otro título.
 
 ## Cómo aprende los gustos
@@ -31,7 +32,10 @@ Solo para mí y mi novia, en un mismo móvil. Sin cuentas ni contraseñas. Todo 
 - **Al empezar**, cada uno hace un swipe de unos 20 títulos conocidos: nota del 1 al 10 o "no la he visto". Dos perfiles: el mío (`yo`) y el de mi novia (`ella`).
 - Mi novia marca además una vez sus **"jamás"** (géneros vetados, por ejemplo terror o guerra); en modo pareja no se proponen.
 - En el Match, lo que se desliza también afina el perfil de quien desliza.
-- Nunca se propone algo ya visto o abandonado.
+- Nunca se propone algo ya visto, abandonado o descartado con "No me apetece".
+- **"No me apetece"** enseña a evitar los géneros de ese título (la mitad que una mala nota, porque no se ha visto) y, si el título es anterior al 2000, hace que lo antiguo salga todavía menos.
+- **Lo antiguo**: nada anterior a 1980 se propone. De 1980 a 1999 pierde puntos, más cuanto más viejo: sale pocas veces y solo si es bastante mejor que lo actual.
+- **Animación (dibujos y anime)**: queda muy abajo por defecto, sin estar prohibida. Vuelve a medida que se le ponen buenas notas a títulos animados; no basta con las de los cuatro clásicos animados del swipe inicial.
 - **Series**: no se lleva la cuenta del capítulo. Solo "vista" (con nota) o "abandonada".
 
 ## Qué hay por detrás
@@ -52,6 +56,7 @@ Solo para mí y mi novia, en un mismo móvil. Sin cuentas ni contraseñas. Todo 
 - **«Elegir yo» descarta la propuesta**: el título que no convenció no entra en esos Duelos ni en ese Match.
 - **Modo pareja**: no se propone nada que haya visto o abandonado cualquiera de los dos, ni géneros "jamás" de ella. Los gustos de los dos cuentan.
 - **Quién puntúa en "Ya la vi"**: en la propuesta y en Duelos, el perfil `yo`. En el Match, quien está deslizando en ese momento.
+- **"No me apetece" se apunta siempre en el perfil `yo`**, también en modo pareja: así lo descartado no vuelve en ningún modo. Se guarda junto a las notas, con el año del título y la noche en que se pulsó (de ahí sale la cuenta de tres por noche, que aguanta cerrar y abrir la app).
 - **"Abandonada"** se ofrece dentro de "Ya la vi", solo en series, junto a los números del 1 al 10.
 - **Swipe inicial**: el mío, la primera vez que se abre la app; el de ella y sus "jamás", la primera vez que se activa "Con mi novia". Mezcla pelis y series.
 - **Match sin ningún sí**: gana el mejor puntuado de los 10.

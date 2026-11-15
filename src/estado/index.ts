@@ -2,6 +2,7 @@ export {
   apuntarGesto,
   cambiarModo,
   cambiarTipo,
+  descartar,
   estadoInicial,
   fijarJamas,
   marcarInicioHecho,
