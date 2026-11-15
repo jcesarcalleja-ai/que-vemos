@@ -1,6 +1,6 @@
 // Estado de la app y operaciones puras sobre él: cada una devuelve un Estado nuevo y no toca el anterior.
 
-import type { DatosPerfil, Estado, Ficha, Genero, Modo, Perfil, Tipo, Valoracion } from '../tipos';
+import type { Animo, DatosPerfil, Estado, Ficha, Genero, Modo, Perfil, Tipo, Valoracion } from '../tipos';
 
 function perfilVacio(): DatosPerfil {
   return { valoraciones: {}, gestos: {}, jamas: [], inicioHecho: false };
@@ -13,6 +13,7 @@ export function estadoInicial(): Estado {
     tipo: 'peli',
     modo: 'solo',
     perfiles: { yo: perfilVacio(), ella: perfilVacio() },
+    animo: null,
   };
 }
 
@@ -29,6 +30,11 @@ export function cambiarTipo(estado: Estado, tipo: Tipo): Estado {
 
 export function cambiarModo(estado: Estado, modo: Modo): Estado {
   return { ...estado, modo };
+}
+
+/** «Hoy nos apetece…» `clave` la noche número `noche`; null lo quita. */
+export function fijarAnimo(estado: Estado, clave: Animo | null, noche: number): Estado {
+  return { ...estado, animo: clave && { clave, noche } };
 }
 
 /** Apunta la nota (entera, 1–10) o 'abandonada' de `perfil` sobre `ficha`. Si ya había una, la sustituye. */

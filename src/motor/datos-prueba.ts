@@ -42,7 +42,7 @@ export function serie(n: string, extra: Partial<Titulo> = {}): Titulo {
 
 export function estadoVacio(modo: Modo = 'solo'): Estado {
   const perfil = () => ({ valoraciones: {}, gestos: {}, jamas: [], inicioHecho: true });
-  return { version: 1, tipo: 'peli', modo, perfiles: { yo: perfil(), ella: perfil() } };
+  return { version: 1, tipo: 'peli', modo, perfiles: { yo: perfil(), ella: perfil() }, animo: null };
 }
 
 /** `cantidad` pelis distintas, con nota creciente (1, 2, 3…) para que el orden sea claro. */

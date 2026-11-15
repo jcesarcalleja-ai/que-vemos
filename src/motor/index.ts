@@ -1,5 +1,6 @@
 export { proponer } from './proponer';
 export { numeroDeNoche } from './puntuar';
+export { ANIMOS, animoDeHoy, animosDisponibles, titulosDeHoy } from './animo';
 export {
   crearTorneo,
   elegirEnDuelo,

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useEstado } from './estado';
+import { titulosDeHoy } from './motor';
 import { perfilPendienteDeInicio } from './pantallas/flujo';
 import { Ajustes } from './pantallas/Ajustes';
 import { Duelos } from './pantallas/Duelos';
@@ -53,7 +54,9 @@ export function App() {
       );
     } else if (vista === 'duelos' || vista === 'match') {
       const Eleccion = vista === 'duelos' ? Duelos : Match;
-      contenido = <Eleccion titulos={titulos.filter((t) => t.id !== rechazada)} onVolver={volver} />;
+      // Con «Hoy nos apetece…» elegido, también los Duelos y el Match son de ese estilo.
+      const deHoy = titulosDeHoy(titulos, estado, new Date());
+      contenido = <Eleccion titulos={deHoy.filter((t) => t.id !== rechazada)} onVolver={volver} />;
     } else {
       contenido = (
         <Propuesta

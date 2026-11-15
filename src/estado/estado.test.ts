@@ -26,6 +26,7 @@ describe('estadoInicial', () => {
       tipo: 'peli',
       modo: 'solo',
       perfiles: { yo: vacio, ella: vacio },
+      animo: null,
     });
   });
 

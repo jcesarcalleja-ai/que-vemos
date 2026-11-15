@@ -1,7 +1,7 @@
 // Guardar y leer el Estado en el almacén del navegador, y exportarlo/importarlo como texto JSON.
 // Todo lo que viene de fuera (almacén o archivo) pasa por `importarEstado`, la única puerta de validación.
 
-import { GENEROS } from '../tipos';
+import { ANIMOS_CLAVES, GENEROS } from '../tipos';
 import type { DatosPerfil, Estado, Gesto, Genero, Perfil, Tipo, Valoracion } from '../tipos';
 import { estadoInicial } from './estado';
 
@@ -52,6 +52,7 @@ export function importarEstado(texto: string): Estado {
     tipo,
     modo,
     perfiles: { yo: leerPerfil(perfiles.yo, 'yo'), ella: leerPerfil(perfiles.ella, 'ella') },
+    animo: leerAnimo(datos.animo),
   };
 }
 
@@ -130,6 +131,13 @@ function leerValoracion(v: unknown, perfil: Perfil): Valoracion {
   const { anio, noche } = v;
   if (!esEntero(anio) || !esEntero(noche)) invalido(`el «No me apetece» de «${titulo}» (${perfil}) está incompleto`);
   return { ...datos, nota, anio, noche };
+}
+
+/** Las copias de antes de «Hoy nos apetece…» no lo traen: cuentan como sin elegir. */
+function leerAnimo(v: unknown): Estado['animo'] {
+  if (v == null) return null;
+  if (!esObjeto(v) || !esEntero(v.noche)) invalido('lo que «hoy nos apetece» está incompleto');
+  return { clave: elegir(v.clave, ANIMOS_CLAVES, 'lo que «hoy nos apetece»'), noche: v.noche };
 }
 
 function leerGesto(v: unknown, perfil: Perfil): Gesto {

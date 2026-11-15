@@ -7,6 +7,7 @@ export { CartaFicha } from './CartaFicha';
 export { CartaTitulo } from './CartaTitulo';
 export { Duelo } from './Duelo';
 export { Interruptores } from './Interruptores';
+export { SelectorAnimo } from './SelectorAnimo';
 export { Cargando, Mensaje, Pantalla, PantallaPaso } from './Pantallas';
 export { SelectorGeneros } from './SelectorGeneros';
 export { SelectorNota } from './SelectorNota';

@@ -366,7 +366,7 @@ button {
 
 .carta__poster .poster {
   /* El póster crece con la pantalla, pero siempre deja sitio a los botones. */
-  width: min(100%, max(9rem, calc((100dvh - 28rem) * 2 / 3)));
+  width: min(100%, max(9rem, calc((100dvh - 31rem) * 2 / 3)));
 }
 
 .acciones {
@@ -716,6 +716,34 @@ button {
 
 .chip[aria-pressed='true']::before {
   content: '✓ ';
+}
+
+/* «Hoy nos apetece…»: una fila que se desliza de lado, sin mover la página. */
+.animo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.6rem calc(-1 * var(--margen-lateral, 1rem)) 0;
+  padding: 0 var(--margen-lateral, 1rem) 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.animo::-webkit-scrollbar {
+  display: none;
+}
+
+.animo__texto {
+  flex: none;
+  color: var(--tenue);
+  font-size: 0.9rem;
+}
+
+.animo .chip {
+  flex: none;
+  min-height: 2.5rem;
+  padding: 0 0.9rem;
+  font-size: 0.95rem;
 }
 
 /* ───────── Pantalla de paso, cargando y mensajes ───────── */

@@ -6,6 +6,7 @@ import {
   cambiarTipo,
   descartar,
   estadoInicial,
+  fijarAnimo,
   fijarJamas,
   marcarInicioHecho,
   valorar,
@@ -45,6 +46,7 @@ function estadoConDatos(): Estado {
   e = apuntarGesto(e, 'ella', peli, false);
   e = fijarJamas(e, 'ella', ['Terror', 'Bélica']);
   e = marcarInicioHecho(e, 'yo');
+  e = fijarAnimo(e, 'miedo', 20500);
   return e;
 }
 
@@ -111,6 +113,11 @@ describe('exportar e importar', () => {
     expect(importarEstado(exportarEstado(e))).toEqual(e);
   });
 
+  it('una copia de antes de «Hoy nos apetece…» (sin ese campo) se importa sin nada elegido', () => {
+    const texto = archivoCon((e) => delete e.animo);
+    expect(importarEstado(texto)).toEqual({ ...estadoConDatos(), animo: null });
+  });
+
   it('descarta campos desconocidos en lugar de colarlos en el estado', () => {
     const texto = archivoCon((e) => {
       e.intruso = true;
@@ -134,6 +141,8 @@ describe('exportar e importar', () => {
     ['género inventado en una nota', archivoCon((e) => (e.perfiles.yo.valoraciones['peli-1'].generos = ['Nada']))],
     ['gesto sin booleano', archivoCon((e) => (e.perfiles.ella.gestos['peli-1'].si = 'no'))],
     ['valoración sin título', archivoCon((e) => delete e.perfiles.yo.valoraciones['peli-1'].titulo)],
+    ['un «hoy nos apetece» inventado', archivoCon((e) => (e.animo.clave = 'siesta'))],
+    ['un «hoy nos apetece» sin la noche', archivoCon((e) => delete e.animo.noche)],
     ['«No me apetece» sin la noche', archivoCon((e) => delete e.perfiles.yo.valoraciones['serie-2'].noche)],
     ['«No me apetece» con un año que no es un número', archivoCon((e) => (e.perfiles.yo.valoraciones['serie-2'].anio = '2017'))],
   ])('importar rechaza: %s', (_nombre, texto) => {

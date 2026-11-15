@@ -17,7 +17,8 @@ Solo para mí y mi novia, en un mismo móvil. Sin cuentas ni contraseñas. Todo 
 1. **Al abrir ya hay una propuesta en pantalla**, sin preguntar nada: póster grande, título, año, duración, nota, una frase de sinopsis y en qué plataforma está.
    - Pelis: entre semana o a partir de las 23:00 tira hacia pelis de menos de 1h45 (105 min). Viernes y sábado le da igual.
    - Series: entre semana tira hacia miniseries o series cortas (1 temporada o menos de 10 episodios).
-2. Arriba solo hay dos interruptores, que recuerdan cómo se dejaron: **Pelis / Series** y **Solo / Con mi novia**.
+2. Arriba hay dos interruptores, que recuerdan cómo se dejaron: **Pelis / Series** y **Solo / Con mi novia**.
+   - Debajo, una fila **"Hoy: Risa · Miedo · Intriga · Acción · Romántica · Drama · Ciencia ficción · Fantasía"**. Es opcional: un toque elige un estilo y esa noche solo se proponen títulos de ese estilo (también en Duelos y Match). Tocar otro lo cambia; tocar el mismo lo quita. Al día siguiente vuelve a no haber nada elegido. Es lo más cerca de un filtro que tiene la app, y lo pidió el usuario tras usarla: un toque, nunca una pregunta.
 3. Botones de la propuesta: **Ver en [plataforma]**, **Tráiler**, **Ya la vi**, **No me apetece** y **Elegir yo**.
    - **No me apetece**: ese título no vuelve a salir nunca, la app aprende de él y enseña otra propuesta. No es un "Otra" sin fin: a la tercera vez en la misma noche (y a partir de ahí, cada vez) lleva directo a Duelos o al Match.
 4. **Elegir yo** (si la propuesta no convence):
@@ -56,6 +57,7 @@ Solo para mí y mi novia, en un mismo móvil. Sin cuentas ni contraseñas. Todo 
 - **«Elegir yo» descarta la propuesta**: el título que no convenció no entra en esos Duelos ni en ese Match.
 - **Modo pareja**: no se propone nada que haya visto o abandonado cualquiera de los dos, ni géneros "jamás" de ella. Los gustos de los dos cuentan.
 - **Quién puntúa en "Ya la vi"**: en la propuesta y en Duelos, el perfil `yo`. En el Match, quien está deslizando en ese momento.
+- **"Hoy nos apetece…"**: cada botón cuenta con que el título tenga alguno de sus géneros (Intriga = Suspense, Misterio o Crimen; Acción = Acción o Aventura). Un botón solo sale si hay al menos 10 títulos de ese estilo (en series no hay Miedo ni Romántica) y, en pareja, no salen los que caen en los "jamás" de ella. Vale de 06:00 a 06:00 y se guarda en el móvil.
 - **"No me apetece" se apunta siempre en el perfil `yo`**, también en modo pareja: así lo descartado no vuelve en ningún modo. Se guarda junto a las notas, con el año del título y la noche en que se pulsó (de ahí sale la cuenta de tres por noche, que aguanta cerrar y abrir la app).
 - **"Abandonada"** se ofrece dentro de "Ya la vi", solo en series, junto a los números del 1 al 10.
 - **Swipe inicial**: el mío, la primera vez que se abre la app; el de ella y sus "jamás", la primera vez que se activa "Con mi novia". Mezcla pelis y series.

@@ -4,6 +4,7 @@ export {
   cambiarTipo,
   descartar,
   estadoInicial,
+  fijarAnimo,
   fijarJamas,
   marcarInicioHecho,
   valorar,

@@ -99,10 +99,25 @@ export interface DatosPerfil {
   inicioHecho: boolean;
 }
 
+/** Los botones de «Hoy nos apetece…» (qué géneros son cada uno: `src/motor/animo.ts`). */
+export const ANIMOS_CLAVES = [
+  'risa',
+  'miedo',
+  'intriga',
+  'accion',
+  'romantica',
+  'drama',
+  'ciencia-ficcion',
+  'fantasia',
+] as const;
+export type Animo = (typeof ANIMOS_CLAVES)[number];
+
 /** Todo lo que se guarda en el móvil. */
 export interface Estado {
   version: 1;
   tipo: Tipo;
   modo: Modo;
   perfiles: Record<Perfil, DatosPerfil>;
+  /** «Hoy nos apetece…»: el estilo elegido y la noche (`numeroDeNoche`) en que vale. Al día siguiente ya no cuenta. */
+  animo: { clave: Animo; noche: number } | null;
 }
