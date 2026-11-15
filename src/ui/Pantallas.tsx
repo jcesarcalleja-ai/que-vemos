@@ -26,10 +26,12 @@ interface PasoProps {
   /** Texto del botón, p. ej. «Vale, soy yo». */
   etiqueta: string;
   onContinuar: () => void;
+  /** Salida discreta bajo el botón, p. ej. «Ahora no, volver a Solo». */
+  salida?: { etiqueta: string; onClick: () => void };
 }
 
 /** Pantalla completa con un mensaje y un botón; p. ej. «Ahora te toca a ti» al cambiar de turno. */
-export function PantallaPaso({ titulo, mensaje, etiqueta, onContinuar }: PasoProps) {
+export function PantallaPaso({ titulo, mensaje, etiqueta, onContinuar, salida }: PasoProps) {
   return (
     <main className="paso">
       <div className="paso__centro">
@@ -39,6 +41,11 @@ export function PantallaPaso({ titulo, mensaje, etiqueta, onContinuar }: PasoPro
       <Boton variante="primario" className="paso__boton" onClick={onContinuar}>
         {etiqueta}
       </Boton>
+      {salida && (
+        <Boton variante="fantasma" className="boton--chico boton--centrado paso__salida" onClick={salida.onClick}>
+          {salida.etiqueta}
+        </Boton>
+      )}
     </main>
   );
 }

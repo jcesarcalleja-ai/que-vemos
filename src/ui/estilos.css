@@ -765,6 +765,10 @@ button {
   margin: 0 auto;
 }
 
+.paso__salida {
+  margin-top: 0.5rem;
+}
+
 .cargando {
   display: flex;
   flex-direction: column;

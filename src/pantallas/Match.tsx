@@ -60,6 +60,7 @@ export function Match({ titulos, onVolver }: Props) {
         {...PASO[turno]}
         etiqueta="Vale, soy yo"
         onContinuar={() => setPasoVisto((v) => ({ ...v, [turno]: true }))}
+        salida={{ etiqueta: 'Volver a la propuesta', onClick: onVolver }}
       />
     );
   }

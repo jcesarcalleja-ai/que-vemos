@@ -31,9 +31,10 @@ export function InicioPerfil({ perfil, conocidos, onAjustes }: Props) {
     else setFase('jamas');
   }, [fase, terminado, perfil, cambiar]);
 
-  /** Por si se activó «Con mi novia» sin querer: se vuelve a «Solo» sin hacer nada más. */
+  /** Por si se activó «Con mi novia» sin querer: se vuelve a «Solo»; lo que ya puntuó ella se queda guardado. */
+  const volverASolo = () => cambiar((e) => cambiarModo(e, 'solo'));
   const ahoraNo = (
-    <Boton variante="fantasma" className="boton--chico boton--centrado" onClick={() => cambiar((e) => cambiarModo(e, 'solo'))}>
+    <Boton variante="fantasma" className="boton--chico boton--centrado" onClick={volverASolo}>
       Ahora no, volver a Solo
     </Boton>
   );
@@ -45,6 +46,7 @@ export function InicioPerfil({ perfil, conocidos, onAjustes }: Props) {
         mensaje="Pásale el móvil: va a puntuar unos cuantos títulos y a marcar lo que no quiere ver jamás."
         etiqueta="Vale, soy yo"
         onContinuar={() => setFase('swipe')}
+        salida={{ etiqueta: 'Ahora no, volver a Solo', onClick: volverASolo }}
       />
     );
   }
@@ -52,7 +54,7 @@ export function InicioPerfil({ perfil, conocidos, onAjustes }: Props) {
   if (fase === 'jamas') {
     return (
       <Pantalla
-        cabecera={<Barra titulo="Lo que no quieres ver jamás" />}
+        cabecera={<Barra titulo="Lo que no quieres ver jamás" onVolver={volverASolo} />}
         pie={
           <>
             <Boton variante="primario" ancho onClick={() => cambiar((e) => marcarInicioHecho(e, 'ella'))}>
@@ -88,7 +90,12 @@ export function InicioPerfil({ perfil, conocidos, onAjustes }: Props) {
 
   return (
     <Pantalla
-      cabecera={<Barra titulo={`${quien} · ${quedan === 1 ? 'queda 1' : `quedan ${quedan}`}`} />}
+      cabecera={
+        <Barra
+          titulo={`${quien} · ${quedan === 1 ? 'queda 1' : `quedan ${quedan}`}`}
+          onVolver={perfil === 'ella' ? volverASolo : undefined}
+        />
+      }
       pie={
         perfil === 'ella' ? (
           ahoraNo
